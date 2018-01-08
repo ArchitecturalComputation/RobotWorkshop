@@ -29,7 +29,7 @@ public class Robot : MonoBehaviour
 
     void Start()
     {
-        _stackable = new StackingVisionReplicate();
+        _stackable = new StackingVisionSimple(); // Stacking program
     }
 
     async void StartLoop()
