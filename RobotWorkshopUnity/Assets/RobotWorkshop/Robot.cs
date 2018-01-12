@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using System.Collections;
 using UnityEngine;
 using static UnityEngine.Mathf;
 
@@ -27,15 +28,33 @@ public class Robot : MonoBehaviour
     int _robotMode = 1;
     string _robotMessage = "Press connect.";
 
+    GameObject block_parent;
+    public GameObject block;  //assign tile prefab in editor
+    public GameObject[] block_arr;
+    int num_blocks = 20;
+
+    void CreateBlock(Vector3 _pos, Quaternion _rota, int _arr_num)
+    {
+        GameObject go = Instantiate(block, _pos, _rota) as GameObject;
+        go.transform.SetParent(block_parent.transform, false);
+        go.gameObject.name = string.Format("Block{0}", _arr_num);
+        block_arr[_arr_num] = go;
+    }
+
     void Start()
     {
-        _stackable = new StackingVisionSimple(); // Stacking program
+        // Creates parent gameobject, and array of buttons
+        block_parent = new GameObject("BlockParent");
+        block_arr = new GameObject[num_blocks];
+
+        _stackable = new StackingTest(num_blocks); // Stacking program
     }
 
     async void StartLoop()
     {
         _robotMessage = "Robot loop started.";
         _looping = true;
+        int loop = 0;
 
         while (_looping)
         {
@@ -50,15 +69,19 @@ public class Robot : MonoBehaviour
             if (_robotAwaiting)
             {
                 _targets = _stackable.GetNextTargets();
-
+         
                 if (_targets == null)
                 {
                     StopLoop();
                     return;
                 }
 
+                CreateBlock(_targets[1].Center, _targets[1].Rotation, loop);
+
                 _server.SendTargets(1, BestGrip(_targets[0]), BestGrip(_targets[1]));
                 _robotAwaiting = false;
+
+                loop++;
             }
         }
     }
@@ -157,3 +180,5 @@ public class Robot : MonoBehaviour
         GUILayout.EndArea();
     }
 }
+
+

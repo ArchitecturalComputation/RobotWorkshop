@@ -9,14 +9,15 @@ public class StackingTest : IStackable
     readonly Vector3 _pickPoint = new Vector3(0.2f, 0, 0.4f);
     readonly Vector3 _placePoint = new Vector3(1.2f, 0, 0.4f);
     readonly Vector3 _tileSize = new Vector3(0.18f, 0.045f, 0.06f);
-    readonly int _tileCount = 6;
+    readonly int _tileCount;
     readonly float _gap = 0.005f;
 
     List<Orient> _pickTiles = new List<Orient>();
     List<Orient> _placeTiles = new List<Orient>();
 
-    public StackingTest()
+    public StackingTest(int _num_blocks)
     {
+        _tileCount = _num_blocks;
         MakePickTower();
     }
 
@@ -35,13 +36,24 @@ public class StackingTest : IStackable
 
         _pickTiles.RemoveAt(_pickTiles.Count - 1);
         _placeTiles.Add(pick);
-
         Message = $"Placing tile {_placeTiles.Count} out of {_tileCount}";
 
         return new[] { pick, place };
     }
-
-
+/* 
+    void PlaceBottomLayer()
+    {
+        for (int i = 0; i < _tileCount; i++)
+        {
+            var next = BlockLocation(i);
+            _pickTiles.Add(new Orient(_pickPoint + next.Center, next.Rotation));
+        }
+    }
+    Orient BlockLocation(int index)
+    {
+        return new Orient(rotation * position, rotation);
+    }
+*/
     void MakePickTower()
     {
         for (int i = 0; i < _tileCount; i++)
