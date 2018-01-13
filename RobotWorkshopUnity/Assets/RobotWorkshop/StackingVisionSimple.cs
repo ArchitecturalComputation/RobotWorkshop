@@ -9,6 +9,8 @@ public class StackingVisionSimple : IStackable
     readonly Rect _rect;
     readonly ICamera _camera;
 
+    List<Orient> _placedTiles = new List<Orient>();
+
     public StackingVisionSimple(ICamera camera)
     {
         Message = "Simple vision stacking.";
@@ -37,6 +39,10 @@ public class StackingVisionSimple : IStackable
         var place = pick;
         place.Center.x += 0.700f;
 
-        return new[] { pick, place };
+        var tiles = new[] { pick, place }
+        .Concat(_placedTiles).ToArray();
+
+        _placedTiles.Add(place);
+        return tiles;
     }
 }

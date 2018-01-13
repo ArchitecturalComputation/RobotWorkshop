@@ -23,6 +23,7 @@ public class Robot : MonoBehaviour
     Server _server;
     IStackable _stackable;
 
+    Material _selectedMaterial;
     Orient[] _targets;
     bool _looping = false;
     bool _robotAwaiting = false;
@@ -31,6 +32,9 @@ public class Robot : MonoBehaviour
 
     void Initialize()
     {
+        _selectedMaterial = new Material(_material);
+        _selectedMaterial.color = Color.red;
+
         ICamera camera =
             _mode == Mode.Virtual ?
             new VirtualCamera() as ICamera :
@@ -115,9 +119,14 @@ public class Robot : MonoBehaviour
 
     private void Update()
     {
-        if (_targets != null)
-            foreach (var target in _targets)
-                Graphics.DrawMesh(_tile, target.Center, target.Rotation, _material, 0);
+        if (_targets == null) return;
+
+        for (int i = 0; i < _targets.Length; i++)
+        {
+            var target = _targets[i];
+            var material = i < 2 ? _selectedMaterial : _material;
+            Graphics.DrawMesh(_tile, target.Center, target.Rotation, material, 0);
+        }
     }
 
 
