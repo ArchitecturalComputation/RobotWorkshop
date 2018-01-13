@@ -17,6 +17,12 @@ public struct Orient
         Rotation = rotation;
     }
 
+    public Orient(float x, float y, float z, float angle)
+    {
+        Center = new Vector3(x, y, z);
+        Rotation = Quaternion.Euler(0, angle, 0);
+    }
+
     public float[] ToFloats()
     {
         return new[]

@@ -9,6 +9,8 @@ public interface IStackable
     string Message { get; set; }
 }
 
+enum Mode { Virtual, Live };
+
 public class Robot : MonoBehaviour
 {
     [SerializeField]
@@ -24,12 +26,17 @@ public class Robot : MonoBehaviour
     Orient[] _targets;
     bool _looping = false;
     bool _robotAwaiting = false;
-    int _robotMode = 1;
+    Mode _mode;
     string _robotMessage = "Press connect.";
 
-    void Start()
+    void Initialize()
     {
-        _stackable = new StackingVisionSimple(); // Stacking program
+        ICamera camera =
+            _mode == Mode.Virtual ?
+            new VirtualCamera() as ICamera :
+            new LiveCamera() as ICamera;
+
+        _stackable = new StackingVisionSimple(camera); // Stacking program
     }
 
     async void StartLoop()
@@ -49,6 +56,8 @@ public class Robot : MonoBehaviour
 
             if (_robotAwaiting)
             {
+                if (_stackable == null) Initialize();
+
                 _targets = _stackable.GetNextTargets();
 
                 if (_targets == null)
@@ -72,7 +81,7 @@ public class Robot : MonoBehaviour
     async void ConnectToRobot()
     {
         _robotMessage = "Waiting for robot to connect...";
-        string ip = _robotMode == 0 ? "127.0.0.1" : "192.168.0.3";
+        string ip = _mode == Mode.Virtual ? "127.0.0.1" : "192.168.0.3";
         await Task.Run(() => _server = new Server(ip, 1025));
 
         if (_server.Connected)
@@ -84,8 +93,6 @@ public class Robot : MonoBehaviour
             _server = null;
         }
     }
-
-
 
     Orient BestGrip(Orient orient)
     {
@@ -122,7 +129,7 @@ public class Robot : MonoBehaviour
         GUILayout.BeginVertical();
         GUILayout.BeginHorizontal();
 
-        _robotMode = GUILayout.SelectionGrid(_robotMode, new[] { "Simulation", "Live" }, 2);
+        _mode = (Mode)GUILayout.SelectionGrid((int)_mode, new[] { "Virtual", "Live" }, 2);
 
         GUILayout.EndHorizontal();
 
@@ -148,11 +155,8 @@ public class Robot : MonoBehaviour
         }
 
         GUILayout.EndHorizontal();
-
-       // GUILayout.BeginHorizontal();
         GUILayout.Label($"<b>Robot:</b> {_robotMessage}");
-        GUILayout.Label($"<b>Stacking:</b> {_stackable.Message}");
-        //GUILayout.EndHorizontal();
+        GUILayout.Label($"<b>Stacking:</b> {_stackable?.Message}");
         GUILayout.EndVertical();
         GUILayout.EndArea();
     }
