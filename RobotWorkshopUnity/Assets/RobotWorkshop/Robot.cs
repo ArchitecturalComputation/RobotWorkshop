@@ -1,11 +1,14 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using static UnityEngine.Mathf;
 
 public interface IStackable
 {
+    // InitBlocks sets initial blocks and instantiates GameObjects in Unity
+    List<Orient> InitBlocks();
     Orient[] GetNextTargets();
     string Message { get; set; }
 }
@@ -32,6 +35,7 @@ public class Robot : MonoBehaviour
     public GameObject block;  //assign tile prefab in editor
     public GameObject[] block_arr;
     int num_blocks = 20;
+    int init_num; // initial number of blocks, from length of List<Orient> _initBlockList
 
     void CreateBlock(Vector3 _pos, Quaternion _rota, int _arr_num)
     {
@@ -41,9 +45,19 @@ public class Robot : MonoBehaviour
         block_arr[_arr_num] = go;
     }
 
+    void initBlocks()
+    {
+        List<Orient> _initBlockList = _stackable.InitBlocks();
+        init_num = _initBlockList.Count;
+        for (int i = 0; i < _initBlockList.Count; i++)
+        {
+            CreateBlock(_initBlockList[i].Center, _initBlockList[i].Rotation, i);
+        }
+    }
+
     void Start()
     {
-        // Creates parent gameobject, and array of buttons
+        // Creates parent gameobject, and array of blocks
         block_parent = new GameObject("BlockParent");
         block_arr = new GameObject[num_blocks];
 
@@ -52,9 +66,11 @@ public class Robot : MonoBehaviour
 
     async void StartLoop()
     {
+        initBlocks();
+
         _robotMessage = "Robot loop started.";
         _looping = true;
-        int loop = 0;
+        int block_count = init_num;
 
         while (_looping)
         {
@@ -76,12 +92,12 @@ public class Robot : MonoBehaviour
                     return;
                 }
 
-                CreateBlock(_targets[1].Center, _targets[1].Rotation, loop);
+                CreateBlock(_targets[1].Center, _targets[1].Rotation, block_count);
 
                 _server.SendTargets(1, BestGrip(_targets[0]), BestGrip(_targets[1]));
                 _robotAwaiting = false;
 
-                loop++;
+                block_count++;
             }
         }
     }

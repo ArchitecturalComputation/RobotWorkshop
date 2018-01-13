@@ -20,6 +20,11 @@ public class StackingOffline : IStackable
         MakePickTower();
     }
 
+    public List<Orient> InitBlocks()
+    {
+        return null;
+    }
+
     public Orient[] GetNextTargets()
     {
         if (_pickTiles.Count == 0)

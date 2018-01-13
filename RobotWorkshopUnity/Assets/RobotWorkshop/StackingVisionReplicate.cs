@@ -22,6 +22,11 @@ public class StackingVisionReplicate : IStackable
         _rect = new Rect(0 + m, 0 + m, 0.7f - m * 2, 0.8f - m * 2);
     }
 
+    public List<Orient> InitBlocks()
+    {
+        return null;
+    }
+
     public Orient[] GetNextTargets()
     {
         if (_isScanning)

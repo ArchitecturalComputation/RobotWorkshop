@@ -1,11 +1,25 @@
-int nextRect = 1;
+int nextRect;
+int padding = 100;
+int numRect = 15;
+int numInit = 3;
 Rectangle[] recs;
+
 void setup()
 {
   size(1400, 800);
   rectMode(CENTER);
-  recs = new Rectangle[30];
-  recs[0] = new Rectangle(280, 150, 0);
+  recs = new Rectangle[numRect];
+  randomSeed(12);
+  initRects(numInit);
+}
+
+void initRects(int _numInit)
+{
+  for (int i = 0; i < _numInit; i++)
+  {
+    recs[i] = new Rectangle(random(padding, width - padding), random(padding, height - padding), random(0, PI));
+  }
+  nextRect = _numInit;
 }
 
 void draw()
@@ -14,39 +28,42 @@ void draw()
   for (Rectangle r : recs)
   {
     if (r != null) r.display();
-  }
-  
+  }  
 }
 
 void keyPressed()
 {
-  int newX = 0, newY = 0; //<>//
-  float maxDist = 0; //maximum minimum distance to bricks for all pixels :)))
-  float minDist;
-  for (int i=100; i<width-100; i++)
+  if (nextRect < numRect)
   {
-    for (int j=100; j<height-100; j++)
+    int newX = 0, newY = 0; //<>//
+    float maxDist = 0; //maximum minimum distance to bricks for all pixels :)))
+    for (int i = padding; i < width - padding; i++)
     {
-      minDist = width;
-      for (Rectangle r : recs)  if (r != null)
+      for (int j = padding; j < height - padding; j++)
       {
-        float d = sqrt( pow((r.x-i), 2) + pow((r.y-j), 2) );
-        if (d<minDist) 
+        float minDist = width + height;
+        for (Rectangle r : recs)  if (r != null)
         {
-          minDist = d;
+          float d = sqrt( pow((r.x-i), 2) + pow((r.y-j), 2) );
+          if (d<minDist) 
+          {
+            minDist = d;
+          }
+        }
+        
+        if (minDist > maxDist)
+        {
+          maxDist = minDist;
+          newX = i;
+          newY = j;
         }
       }
-      
-      if (minDist>maxDist)
-      {
-        maxDist = minDist;
-        newX = i;
-        newY = j;
-      }
-      
     }
-  }
-
-  recs[nextRect] = new Rectangle(newX, newY, 0);
-  nextRect++;
+  
+    float angle = atan2((newY - recs[nextRect-1].y), (newX - recs[nextRect-1].x));
+    recs[nextRect] = new Rectangle(newX, newY, angle);
+    
+    nextRect++;
+    println(nextRect);  
+  } else println("Max number of rectangles reached!");  
 }
