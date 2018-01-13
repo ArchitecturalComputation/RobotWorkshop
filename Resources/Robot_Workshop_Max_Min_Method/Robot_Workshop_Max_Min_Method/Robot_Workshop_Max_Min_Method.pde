@@ -1,7 +1,7 @@
 int nextRect;
 int padding = 100;
 int numRect = 15;
-int numInit = 3;
+int numInit = 2;
 Rectangle[] recs;
 
 void setup()
@@ -9,16 +9,18 @@ void setup()
   size(1400, 800);
   rectMode(CENTER);
   recs = new Rectangle[numRect];
-  randomSeed(12);
+  randomSeed(1);
   initRects(numInit);
 }
 
 void initRects(int _numInit)
 {
-  for (int i = 0; i < _numInit; i++)
-  {
-    recs[i] = new Rectangle(random(padding, width - padding), random(padding, height - padding), random(0, PI));
-  }
+  //for (int i = 0; i < _numInit; i++)
+  //{
+  //  recs[i] = new Rectangle(random(padding, width - padding), random(padding, height - padding), random(0, PI));
+  //}
+  recs[0] = new Rectangle(400, 500, 0);
+  recs[1] = new Rectangle(800, 300, PI/2);
   nextRect = _numInit;
 }
 
@@ -64,6 +66,6 @@ void keyPressed()
     recs[nextRect] = new Rectangle(newX, newY, angle);
     
     nextRect++;
-    println(nextRect);  
+    println(String.format("Block number: %d, %d, %d, %f", nextRect, newX, newY, angle));  
   } else println("Max number of rectangles reached!");  
 }

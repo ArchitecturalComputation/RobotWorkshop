@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Collections;
 using System.Collections.Generic;
@@ -34,7 +35,7 @@ public class Robot : MonoBehaviour
     GameObject block_parent;
     public GameObject block;  //assign tile prefab in editor
     public GameObject[] block_arr;
-    int num_blocks = 20;
+    int num_blocks = 15;
     int init_num; // initial number of blocks, from length of List<Orient> _initBlockList
 
     void CreateBlock(Vector3 _pos, Quaternion _rota, int _arr_num)
@@ -49,6 +50,7 @@ public class Robot : MonoBehaviour
     {
         List<Orient> _initBlockList = _stackable.InitBlocks();
         init_num = _initBlockList.Count;
+        block_arr = new GameObject[num_blocks + init_num];
         for (int i = 0; i < _initBlockList.Count; i++)
         {
             CreateBlock(_initBlockList[i].Center, _initBlockList[i].Rotation, i);
@@ -59,8 +61,7 @@ public class Robot : MonoBehaviour
     {
         // Creates parent gameobject, and array of blocks
         block_parent = new GameObject("BlockParent");
-        block_arr = new GameObject[num_blocks];
-
+        
         _stackable = new StackingTest(num_blocks); // Stacking program
     }
 
@@ -72,33 +73,40 @@ public class Robot : MonoBehaviour
         _looping = true;
         int block_count = init_num;
 
-        while (_looping)
+        try
         {
-            if (!_robotAwaiting)
+            while (_looping)
             {
-                await Task.Run(() => _robotAwaiting = (_server.Read() == 1));
-            }
 
-            if (!_looping)
-                return;
-
-            if (_robotAwaiting)
-            {
-                _targets = _stackable.GetNextTargets();
-         
-                if (_targets == null)
+                if (!_robotAwaiting)
                 {
-                    StopLoop();
-                    return;
+                    await Task.Run(() => _robotAwaiting = (_server.Read() == 1));
                 }
 
-                CreateBlock(_targets[1].Center, _targets[1].Rotation, block_count);
+                if (!_looping)
+                    return;
 
-                _server.SendTargets(1, BestGrip(_targets[0]), BestGrip(_targets[1]));
-                _robotAwaiting = false;
+                if (_robotAwaiting)
+                {
+                    _targets = _stackable.GetNextTargets();
+            
+                    if (_targets == null)
+                    {
+                        StopLoop();
+                        return;
+                    }
+                 
+                    _server.SendTargets(1, BestGrip(_targets[0]), BestGrip(_targets[1]));
+                    _robotAwaiting = false;
 
-                block_count++;
+                    CreateBlock(_targets[1].Center, _targets[1].Rotation, block_count);
+                    block_count++;
+                }
             }
+        } 
+        catch (Exception e) 
+        {
+            Debug.Log(String.Format("Error: '{0}'", e));
         }
     }
 
