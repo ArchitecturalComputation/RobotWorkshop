@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using static UnityEngine.Mathf;
@@ -40,7 +41,7 @@ public class Robot : MonoBehaviour
             new VirtualCamera() as ICamera :
             new LiveCamera() as ICamera;
 
-        _stackable = new StackingVisionSimple(camera); // Stacking program
+        _stackable = new StackingFillAndBuild(camera); // Stacking program
     }
 
     async void StartLoop()
@@ -48,34 +49,41 @@ public class Robot : MonoBehaviour
         _robotMessage = "Robot loop started.";
         _looping = true;
 
-        while (_looping)
+        try
         {
-            if (!_robotAwaiting)
+
+            while (_looping)
             {
-                await Task.Run(() => _robotAwaiting = (_server.Read() == 1));
-            }
-
-            if (!_looping)
-                return;
-
-            if (_robotAwaiting)
-            {
-                if (_stackable == null) Initialize();
-
-                _targets = _stackable.GetNextTargets();
-
-                if (_targets == null)
+                if (!_robotAwaiting)
                 {
-                    StopLoop();
-                    return;
+                    await Task.Run(() => _robotAwaiting = (_server.Read() == 1));
                 }
 
-                _server.SendTargets(1, BestGrip(_targets[0]), BestGrip(_targets[1]));
-                _robotAwaiting = false;
+                if (!_looping)
+                    return;
+
+                if (_robotAwaiting)
+                {
+                    if (_stackable == null) Initialize();
+
+                    _targets = _stackable.GetNextTargets();
+
+                    if (_targets == null)
+                    {
+                        StopLoop();
+                        return;
+                    }
+
+                    _server.SendTargets(1, BestGrip(_targets[0]), BestGrip(_targets[1]));
+                    _robotAwaiting = false;
+                }
             }
+        } catch (Exception e)
+        {
+            Debug.Log(e);
         }
     }
-
+        
     void StopLoop()
     {
         _robotMessage = "Robot loop stopped.";
