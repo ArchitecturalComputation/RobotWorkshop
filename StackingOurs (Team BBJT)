@@ -74,10 +74,7 @@ public class StackingOurs : IStackable
         var rotation = Quaternion.Euler(0, evenLayer ? 0 : -90, 0);
         rotation = rotation * startTiles[towerIndex].Rotation;
 
-        Vector3 position;
-
-        if (evenTile) position = new Vector3(0, (layer + 1) * _tileSize.y, (row - 1f) * _tileSize.z);
-        else position = new Vector3(0, (layer + 1) * _tileSize.y, row * _tileSize.z);
+        Vector3 position = new Vector3(0, (layer + 1) * _tileSize.y, (row - 0.5f) * (_tileSize.z * 2));
 
         position = position + startTiles[towerIndex].Center;
 
