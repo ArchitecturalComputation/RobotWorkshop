@@ -68,19 +68,26 @@ public class StackingOurs : IStackable
 
         int row = ((count % (towers*2)) - towerIndex)/ 2;
 
-        /* for debugging
-         Debug.Log("count: " + count.ToString());
-        Debug.Log("towers: " + towers.ToString());
-        Debug.Log("layer: " + layer.ToString());
-        Debug.Log("row: " + row.ToString());
-        Debug.Log("used index:  " + towerIndex.ToString());*/
-
         var rotation = Quaternion.Euler(0, evenLayer ? 0 : -90, 0);
 
         Vector3 position = new Vector3(0, (layer + 1) * _tileSize.y, (row - 0.5f) * (_tileSize.z * 2));
         position = position + startTiles[towerIndex].Center;
 
-        return new Orient(rotation * position, rotation);
+        if (!evenLayer)
+        {
+            if (row == 0)
+            {
+                Vector3 move = new Vector3(0.06f, 0, 0.06f);
+                position = move + position;
+            }
+            else
+            {
+                Vector3 move = new Vector3(-0.06f, 0, -0.06f);
+                position = move + position;
+            }
+        }
+
+        return new Orient(position, rotation);
     }
 
     void MakePickTower()
