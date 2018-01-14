@@ -12,7 +12,7 @@ public class StackingOurs : IStackable
     readonly int _tileCount = 24;
     readonly float _gap = 0.005f;
     readonly Rect _rect;
-    
+
     List<Orient> _pickTiles = new List<Orient>();
     List<Orient> _placeTiles = new List<Orient>();
 
@@ -25,7 +25,7 @@ public class StackingOurs : IStackable
 
         MakePickTower();
     }
-   
+
     public Orient[] GetNextTargets()
     {
         //var topLayer = Motive.GetTiles(_rect);
@@ -42,42 +42,42 @@ public class StackingOurs : IStackable
             Message = "Camera error.";
             return null;
         }
-        
-            var pick = _pickTiles.Last();
 
-            var place = NewLocation(_tileCount - _pickTiles.Count, _startTiles);
+        var pick = _pickTiles.Last();
 
-            place.Center += _placePoint;
-            _pickTiles.RemoveAt(_pickTiles.Count - 1);
-            _placeTiles.Add(pick);
+        var place = NewLocation(_tileCount - _pickTiles.Count, _startTiles);
 
-            Message = $"Placing tile {_placeTiles.Count} out of {_tileCount}";
+        place.Center += _placePoint;
+        _pickTiles.RemoveAt(_pickTiles.Count - 1);
+        _placeTiles.Add(pick);
 
-            return new[] { pick, place };
+        Message = $"Placing tile {_placeTiles.Count} out of {_tileCount}";
+
+        return new[] { pick, place };
     }
 
     Orient NewLocation(int index, List<Orient> startTiles)
     {
-        int count = index;
         int towers = startTiles.Count;
-        int layer = count/2/towers;
-        int row = count % 2;
+        int count = index;
+        int layer = count / 2 / towers;
+        int row;
+        int towerIndex = count % towers;
         bool evenLayer = layer % 2 == 0;
-        bool evenTile = row == 0;
+        bool evenTower  = towerIndex % 2 == 0;
 
-        int towerIndex = (count / 2) - (layer * towers); //This is not working, goes from towerIndex 0 to 1 but never back to 0. Another way to get the towerIndex? 
+        if (evenTower) row = (count%4)/2;
+        else row = ((count % 4) -1)/ 2;
+
         Debug.Log("count: " + count.ToString());
         Debug.Log("towers: " + towers.ToString());
         Debug.Log("layer: " + layer.ToString());
+        Debug.Log("row: " + row.ToString());
         Debug.Log("used index:  " + towerIndex.ToString());
 
-        var rotation = Quaternion.Euler(0, evenLayer ? 0 : -90, 0);
-        rotation = rotation * startTiles[towerIndex].Rotation;
-
-        Vector3 position;
+        var rotation = Quaternion.Euler(new Vector3(0, evenLayer ? 0 : -90, 0) + startTiles[towerIndex].Center);
  
-        if (evenTile) position = new Vector3(0, (layer + 1) * _tileSize.y, (row - 1f) * _tileSize.z);
-        else position = new Vector3(0, (layer + 1) * _tileSize.y, row * _tileSize.z);
+        Vector3 position = new Vector3(0, (layer + 1) * _tileSize.y, (row - 0.5f) * (_tileSize.z * 2));
 
         position = position + startTiles[towerIndex].Center;
 
@@ -100,11 +100,11 @@ public class StackingOurs : IStackable
         int row = count % 3;
         bool isEven = layer % 2 == 0;
 
-        Vector3 position = new Vector3(0, (layer + 1) * _tileSize.y, (row - 1) * _tileSize.z+ _gap);
+        Vector3 position = new Vector3(0, (layer + 1) * _tileSize.y, (row - 1) * _tileSize.z + _gap);
         var rotation = Quaternion.Euler(0, isEven ? 0 : -90, 0);
         return new Orient(rotation * position, rotation);
     }
-    
+
     List<Orient> simulateCamera()
     {
         var _tempList = new List<Orient>();
