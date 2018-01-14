@@ -61,24 +61,23 @@ public class StackingOurs : IStackable
         int towers = startTiles.Count;
         int count = index;
         int layer = count / 2 / towers;
-        int row;
+
         int towerIndex = count % towers;
         bool evenLayer = layer % 2 == 0;
         bool evenTower  = towerIndex % 2 == 0;
 
-        if (evenTower) row = (count%4)/2;
-        else row = ((count % 4) -1)/ 2;
+        int row = ((count % (towers*2)) - towerIndex)/ 2;
 
-        Debug.Log("count: " + count.ToString());
+        /* for debugging
+         Debug.Log("count: " + count.ToString());
         Debug.Log("towers: " + towers.ToString());
         Debug.Log("layer: " + layer.ToString());
         Debug.Log("row: " + row.ToString());
-        Debug.Log("used index:  " + towerIndex.ToString());
+        Debug.Log("used index:  " + towerIndex.ToString());*/
 
-        var rotation = Quaternion.Euler(new Vector3(0, evenLayer ? 0 : -90, 0) + startTiles[towerIndex].Center);
- 
+        var rotation = Quaternion.Euler(0, evenLayer ? 0 : -90, 0);
+
         Vector3 position = new Vector3(0, (layer + 1) * _tileSize.y, (row - 0.5f) * (_tileSize.z * 2));
-
         position = position + startTiles[towerIndex].Center;
 
         return new Orient(rotation * position, rotation);
