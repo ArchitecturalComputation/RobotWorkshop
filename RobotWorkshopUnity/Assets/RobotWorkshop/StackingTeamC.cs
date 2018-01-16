@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class StackingTeamC : IStackable
 {
@@ -9,69 +10,102 @@ public class StackingTeamC : IStackable
     readonly Vector3 _pickPoint = new Vector3(0.2f, 0, 0.4f);
     readonly Vector3 _placePoint = new Vector3(1.2f, 0, 0.4f);
     readonly Vector3 _tileSize = new Vector3(0.18f, 0.045f, 0.06f);
-    readonly int _tileCount = 6;
     readonly float _gap = 0.005f;
+    readonly ICamera _camera;
 
-    List<Orient> _pickTiles = new List<Orient>();
     List<Orient> _placeTiles = new List<Orient>();
 
-    public StackingTeamC()
+    public StackingTeamC(Mode mode)
     {
+        _camera = mode == Mode.Virtual ? new TeamCVirtualCamera() as ICamera : new LiveCamera() as ICamera;
         MakePickTower();
+    }
+
+    bool CheckCamera(IList<Orient> tiles)
+    {
+        if (tiles.Count == 0)
+        {
+            Message = "No tiles left.";
+            return false;
+        }
+
+        if (tiles == null)
+        {
+            Message = "Camera error.";
+            return false;
+        }
+
+        return true;
     }
 
     public Orient[] GetNextTargets()
     {
-        if (_pickTiles.Count == 0)
+        float m = 0.02f;
+
+        if (_placeTiles.Count == 0)
         {
-            Message = "No tiles left.";
-            return null;
+            var scanRect = new Rect(1.4f * 0.25f + m, 0 + m, 1.4f * 0.75f - m * 2, 0.8f - m * 2);
+            var scanTiles = _camera.GetTiles(scanRect);
+            if (!CheckCamera(scanTiles)) return null;
+            if (scanTiles.Count > 1)
+            {
+                Message = "Place a single tile on the next row and press 'start loop'.";
+                return null;
+            }
+
+            _placeTiles = CreateRow(scanTiles.First(), scanRect.center);
         }
 
-        var pick = _pickTiles.Last();
+        var pickRect = new Rect(0 + m, 0 + m, 1.4f * 0.25f - m * 2, 0.8f - m * 2);
+        var pickTiles = _camera.GetTiles(pickRect);
+        if (!CheckCamera(pickTiles)) return null;
 
-        var place = RandomLocation(_tileCount - _pickTiles.Count);
-        place.Center += _placePoint;
+        var pick = pickTiles.First();
+        var place = _placeTiles.First();
+        _placeTiles.RemoveAt(0);
 
-        _pickTiles.RemoveAt(_pickTiles.Count - 1);
-        _placeTiles.Add(pick);
-
-        Message = $"Placing tile {_placeTiles.Count} out of {_tileCount}";
-
-        return new[] { pick, place };
+        Message = $"{_placeTiles.Count} tiles remaining in the row";
+        return new[] { pick, place }
+        .Concat(_placeTiles).ToArray();
     }
 
-
-    void MakePickTower()
+    List<Orient> CreateRow(Orient orient, Vector3 center)
     {
-        for (int i = 0; i < _tileCount; i++)
+        var newTile = orient.RotateAround(center, 45f);
+        throw new NotImplementedException("To be implemented by team C.");
+    }
+}
+
+class TeamCVirtualCamera : ICamera
+{
+    Queue<Orient[]> _sequence;
+
+    public TeamCVirtualCamera()
+    {
+        var t = new[]
         {
-            var next = JengaLocation(i);
-            _pickTiles.Add(new Orient(_pickPoint + next.Center, next.Rotation));
-        }
+           new Orient(0.1f,0.045f,0.3f,90.0f),
+           new Orient(0.2f,0.045f*2,0.1f,30.0f),
+           new Orient(0.1f,0.045f,0.5f,90)
+        };
+
+        _sequence = new Queue<Orient[]>(new[]
+        {
+           new[] {t[0]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new Orient[0]
+        });
     }
 
-    Orient JengaLocation(int index)
+    public IList<Orient> GetTiles(Rect area)
     {
-        int count = index;
-        int layer = count / 3;
-        int row = count % 3;
-        bool isEven = layer % 2 == 0;
-
-        Vector3 position = new Vector3(0, (layer + 1) * _tileSize.y, (row - 1) * _tileSize.z);
-        var rotation = Quaternion.Euler(0, isEven ? 0 : -90, 0);
-        return new Orient(rotation * position, rotation);
-    }
-
-    Orient RandomLocation(int index)
-    {
-        int count = _placeTiles.Count;
-        int layer = count / 2;
-        int row = count % 2 * Random.Range(1, 2);
-        bool isEven = layer % 2 == 0;
-
-        Vector3 position = new Vector3(0, (layer + 1) * _tileSize.y, (row - 1) * _tileSize.z + _gap);
-        var rotation = Quaternion.Euler(0, isEven ? 0 : -90, 0);
-        return new Orient(rotation * position, rotation);
+        return _sequence.Dequeue();
     }
 }
