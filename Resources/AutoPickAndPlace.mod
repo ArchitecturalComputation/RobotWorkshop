@@ -1,6 +1,7 @@
 MODULE AutoPickAndPlace
 
     RECORD Block
+        num info;
         pose pick;
         pose place;
     ENDRECORD
@@ -43,16 +44,15 @@ MODULE AutoPickAndPlace
         VAR rawbytes sendBytes;
         VAR rawbytes getBytes;
         VAR Block outBlock;
-        VAR num info;
         VAR num floats{byteCount-1};
 
         PackRawBytes 1,sendBytes,1\IntX:=DINT;
         SocketSend socket\RawData:=sendBytes;
         SocketReceive socket\RawData:=getBytes\ReadNoOfBytes:=15*4;
-        UnpackRawBytes getBytes,1,info\IntX:=DINT;
+        UnpackRawBytes getBytes,1,outBlock.info\IntX:=DINT;
 
-        IF NOT info=1 THEN
-            TPWrite "Info: "\Num:=info;
+        IF outBlock.info=0 THEN
+            TPWrite "Info: "\Num:=outBlock.info;
             Stop;
         ENDIF
 
@@ -63,7 +63,7 @@ MODULE AutoPickAndPlace
         outBlock.pick:=[[floats{1},floats{2},floats{3}],[floats{4},floats{5},floats{6},floats{7}]];
         outBlock.place:=[[floats{8},floats{9},floats{10}],[floats{11},floats{12},floats{13},floats{14}]];
 
-        TPWrite "Info: "\Num:=info;
+        TPWrite "Info: "\Num:=outBlock.info;
         TPWrite "Block pick pos: "\Pos:=outBlock.pick.trans;
         TPWrite "Block pick rot: "\Orient:=outBlock.pick.rot;
 
@@ -143,9 +143,14 @@ MODULE AutoPickAndPlace
         ! place offset aligned loaded       
         MoveL Offs(place,0,0,offset),speed2,zone3,gripper\WObj:=frame;
 
-
         ! place offset neutral loaded       
         MoveL Offs(placeNeutral,0,0,offset),speed3,zone3,gripper\WObj:=frame;
+
+        ! retract for camera
+        IF inBlock.info=2 THEN
+            MoveL [[place.trans.x,40,place.trans.z+offset],neutral,[1,1,0,0],exj],speed3,zone3,gripper\WObj:=frame;
+        ENDIF
+
     ENDPROC
 
 ENDMODULE
