@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class StackingOffline : IStackable
+public class StackingTeamC : IStackable
 {
     public string Message { get; set; }
 
@@ -15,7 +15,7 @@ public class StackingOffline : IStackable
     List<Orient> _pickTiles = new List<Orient>();
     List<Orient> _placeTiles = new List<Orient>();
 
-    public StackingOffline()
+    public StackingTeamC()
     {
         MakePickTower();
     }
