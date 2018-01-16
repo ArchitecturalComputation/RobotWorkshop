@@ -134,20 +134,11 @@ public class StackingTeamBBJT : IStackable
 
     Vector3 towardsMiddle(Vector3 midpoint, Vector3 position)
     {
-        //float x = 0;
-        //float z = 0;
 
         var vector = midpoint - position;
         var distance = Mathf.Min(vector.magnitude, 0.015f);
 
         return position + vector.normalized * distance;
-
-        //if (midpoint.x > position.x) x = 0.015f;
-        //if (midpoint.x < position.x) x = -0.015f;
-        //if (midpoint.z > position.z) z = 0.015f;
-        //if (midpoint.z < position.z) z = -0.015f;
-        //Vector3 temp = new Vector3(x, 0, z);
-        //return temp;
     }
 }
 
