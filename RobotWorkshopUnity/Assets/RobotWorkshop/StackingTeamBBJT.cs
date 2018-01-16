@@ -2,7 +2,7 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class StackingOurs : IStackable
+public class StackingTeamBBJT : IStackable
 {
     public string Message { get; set; }
 
@@ -16,7 +16,7 @@ public class StackingOurs : IStackable
     List<Orient> _pickTiles = new List<Orient>();
     List<Orient> _placeTiles = new List<Orient>();
 
-    public StackingOurs()
+    public StackingTeamBBJT()
     {
         /* NOT USED ATM
         Message = "Our vision stackning";

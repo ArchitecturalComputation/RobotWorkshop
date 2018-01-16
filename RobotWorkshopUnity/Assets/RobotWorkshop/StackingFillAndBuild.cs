@@ -18,12 +18,13 @@ public class StackingFillAndBuild : IStackable
     readonly Rect _place_area;
     readonly ICamera _camera;
 
-    public StackingFillAndBuild(ICamera camera)
+    public StackingFillAndBuild(Mode mode)
     {
+
         float m = 0.02f;
         _pick_area = new Rect(0 + m, 0 + m, 0.4f - 2 * m, 0.8f - 2 * m);
         _place_area = new Rect(0.4f + m, 0 + m, 1.0f - 2 * m, 0.8f - 2 * m);
-        _camera = camera;
+        _camera = mode == Mode.Virtual ? new TeamAVirtualCamera() as ICamera : new LiveCamera() as ICamera;
     }
 
     public Orient[] GetNextTargets()
@@ -130,8 +131,8 @@ public class StackingFillAndBuild : IStackable
             }
         }
         // (a) get angle to point at previous block
-        float prev_block_x = existing_blocks[existing_blocks.Count -1].Center.x;
-        float prev_block_z = existing_blocks[existing_blocks.Count -1].Center.z;
+        float prev_block_x = existing_blocks[existing_blocks.Count - 1].Center.x;
+        float prev_block_z = existing_blocks[existing_blocks.Count - 1].Center.z;
         float angle_prev = -Mathf.Rad2Deg * Mathf.Atan2(new_block_z - prev_block_z, new_block_x - prev_block_x);
         // Debug.Log(string.Format("dx = {0}, dz = {1}, angle = {2}", new_block_x - prev_block_x, new_block_z - prev_block_z, angle_prev));
         // (b) get angle to average of all previous blocks 
@@ -154,5 +155,84 @@ public class StackingFillAndBuild : IStackable
 
         Debug.Log(string.Format("Block {0} location: {1:0.000}, {2:0.000}, {3:0.000}", existing_blocks.Count + 1, new_block_x, new_block_y, new_block_z));
         return new_block;
+    }
+
+    class TeamAVirtualCamera : ICamera
+    {
+        readonly Vector3 _tileSize = new Vector3(0.18f, 0.045f, 0.06f);
+        readonly float _tile_gap = 0.01f;
+        int _current_pos;
+        int _current_layer;
+        int _tower_length;
+        int _tower_height;
+        List<Orient> _pick_tower = new List<Orient>();
+        IList<Orient> _placed_blocks = new List<Orient>();
+
+        public TeamAVirtualCamera()
+        {
+            var init_blocks = new[]
+            {
+           new Orient(0.4f, 0.045f, 0.5f, 0),
+           new Orient(0.8f, 0.045f, 0.3f, 90.0f),
+        };
+            // create virtual pick tower
+            _pick_tower = CreatePickTower();
+            // create virtual initial placed blocks
+            foreach (var block in init_blocks)
+            {
+                _placed_blocks.Add(block);
+            }
+        }
+
+        public IList<Orient> GetTiles(Rect area)
+        {
+            // set border between pick and place area
+            float pick_place_border_x = 0.4f;
+
+            if (area.x < pick_place_border_x)
+            {
+                // in pick area
+                var _pick_top_layer = _pick_tower.GetRange(((_current_layer - 1) * _tower_length) - 1, _current_pos);
+                // Debug.Log(string.Format("number of blocks in top pick layer = {0}", _current_pos));
+                _pick_tower.RemoveAt(_pick_tower.Count - 1);
+                _current_pos -= 1;
+                if (_current_pos == 0)
+                {
+                    _current_layer -= 1;
+                    _current_pos = _tower_length;
+                    if (_current_layer < 0)
+                    {
+                        Debug.Log("No blocks left");
+                        return null;
+                    }
+                }
+                return _pick_top_layer;
+            }
+            else
+            {
+                // in place area
+                return _placed_blocks;
+            }
+        }
+
+        List<Orient> CreatePickTower()
+        {
+            // make blocks in virtual pick tower, stacked as length x height
+            _tower_length = 10;
+            _tower_height = 5;
+            for (int i = 0; i < _tower_height; i++)
+            {
+                for (int j = 0; j < _tower_length; j++)
+                {
+                    float z = 0.05f + j * (_tileSize.z + _tile_gap);
+                    float y = (i + 1) * _tileSize.y;
+                    Orient pick_block = new Orient(0.1f, y, z, 0);
+                    _pick_tower.Add(pick_block);
+                }
+            }
+            _current_pos = _tower_length;
+            _current_layer = _tower_height;
+            return _pick_tower;
+        }
     }
 }

@@ -11,12 +11,12 @@ public class StackingVisionSimple : IStackable
 
     List<Orient> _placedTiles = new List<Orient>();
 
-    public StackingVisionSimple(ICamera camera)
+    public StackingVisionSimple(Mode mode)
     {
         Message = "Simple vision stacking.";
         float m = 0.02f;
         _rect = new Rect(0 + m, 0 + m, 0.7f - m * 2, 0.8f - m * 2);
-        _camera = camera;
+        _camera = mode == Mode.Virtual ? new VirtualCamera() as ICamera : new LiveCamera() as ICamera;
     }
 
     public Orient[] GetNextTargets()

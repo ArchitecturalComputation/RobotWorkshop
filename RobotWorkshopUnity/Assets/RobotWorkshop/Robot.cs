@@ -10,7 +10,7 @@ public interface IStackable
     string Message { get; set; }
 }
 
-enum Mode { Virtual, Live };
+public enum Mode { Virtual, Live };
 
 public class Robot : MonoBehaviour
 {
@@ -30,18 +30,15 @@ public class Robot : MonoBehaviour
     bool _robotAwaiting = false;
     Mode _mode;
     string _robotMessage = "Press connect.";
+    bool _retract = false;
 
     void Initialize()
     {
         _selectedMaterial = new Material(_material);
         _selectedMaterial.color = Color.red;
 
-        ICamera camera =
-            _mode == Mode.Virtual ?
-            new VirtualCamera() as ICamera :
-            new LiveCamera() as ICamera;
-
-        _stackable = new StackingFillAndBuild(camera); // Stacking program
+        _retract = true;
+        _stackable = new StackingFillAndBuild(_mode); // Stacking program
     }
 
     async void StartLoop()
@@ -49,41 +46,35 @@ public class Robot : MonoBehaviour
         _robotMessage = "Robot loop started.";
         _looping = true;
 
-        try
-        {
 
-            while (_looping)
+        while (_looping)
+        {
+            if (!_robotAwaiting)
             {
-                if (!_robotAwaiting)
-                {
-                    await Task.Run(() => _robotAwaiting = (_server.Read() == 1));
-                }
-
-                if (!_looping)
-                    return;
-
-                if (_robotAwaiting)
-                {
-                    if (_stackable == null) Initialize();
-
-                    _targets = _stackable.GetNextTargets();
-
-                    if (_targets == null)
-                    {
-                        StopLoop();
-                        return;
-                    }
-
-                    _server.SendTargets(1, BestGrip(_targets[0]), BestGrip(_targets[1]));
-                    _robotAwaiting = false;
-                }
+                await Task.Run(() => _robotAwaiting = (_server.Read() == 1));
             }
-        } catch (Exception e)
-        {
-            Debug.Log(e);
+
+            if (!_looping)
+                return;
+
+            if (_robotAwaiting)
+            {
+                if (_stackable == null) Initialize();
+
+                _targets = _stackable.GetNextTargets();
+
+                if (_targets == null)
+                {
+                    StopLoop();
+                    return;
+                }
+
+                _server.SendTargets(_retract ? 2 : 1, BestGrip(_targets[0]), BestGrip(_targets[1]));
+                _robotAwaiting = false;
+            }
         }
     }
-        
+
     void StopLoop()
     {
         _robotMessage = "Robot loop stopped.";
@@ -136,7 +127,6 @@ public class Robot : MonoBehaviour
             Graphics.DrawMesh(_tile, target.Center, target.Rotation, material, 0);
         }
     }
-
 
     private void OnGUI()
     {
