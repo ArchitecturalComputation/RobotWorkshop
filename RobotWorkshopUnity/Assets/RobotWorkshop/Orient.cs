@@ -23,6 +23,21 @@ public struct Orient
         Rotation = Quaternion.Euler(0, angle, 0);
     }
 
+    public Orient Transform(Orient other)
+    {
+        var center = other.Rotation * Center + other.Center;
+        var rotation = other.Rotation * Rotation;
+        return new Orient(center, rotation);
+    }
+
+    public Orient RotateAround(Vector3 origin, float angle)
+    {
+        var quat = Quaternion.Euler(0, angle, 0);
+        var center = origin + quat * (Center - origin);
+        var rotation = quat * Rotation;
+        return new Orient(center, rotation);
+    }
+
     public float[] ToFloats()
     {
         return new[]
