@@ -2,7 +2,7 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class StackingOurs : IStackable
+public class StackingTeamBBJT : IStackable
 {
     public string Message { get; set; }
 
@@ -16,7 +16,7 @@ public class StackingOurs : IStackable
     List<Orient> _placeTiles = new List<Orient>();
     int _tileCount = 0;
 
-    public StackingOurs(Mode mode)
+    public StackingTeamBBJT(Mode mode)
     {
         Message = "Our vision stackning.";
         _camera = mode == Mode.Virtual ? new TeamBBJTVirtualCamera() as ICamera : new LiveCamera() as ICamera;
@@ -134,20 +134,10 @@ public class StackingOurs : IStackable
 
     Vector3 towardsMiddle(Vector3 midpoint, Vector3 position)
     {
-        //float x = 0;
-        //float z = 0;
-
         var vector = midpoint - position;
         var distance = Mathf.Min(vector.magnitude, 0.015f);
 
         return position + vector.normalized * distance;
-
-        //if (midpoint.x > position.x) x = 0.015f;
-        //if (midpoint.x < position.x) x = -0.015f;
-        //if (midpoint.z > position.z) z = 0.015f;
-        //if (midpoint.z < position.z) z = -0.015f;
-        //Vector3 temp = new Vector3(x, 0, z);
-        //return temp;
     }
 }
 
