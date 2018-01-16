@@ -18,7 +18,7 @@ public class StackingTeamBBJT : IStackable
 
     public StackingTeamBBJT(Mode mode)
     {
-        Message = "Our vision stackning.";
+        Message = "Team BBJT stacking tiles";
         _camera = mode == Mode.Virtual ? new TeamBBJTVirtualCamera() as ICamera : new LiveCamera() as ICamera;
     }
 
@@ -134,7 +134,6 @@ public class StackingTeamBBJT : IStackable
 
     Vector3 towardsMiddle(Vector3 midpoint, Vector3 position)
     {
-
         var vector = midpoint - position;
         var distance = Mathf.Min(vector.magnitude, 0.015f);
 
