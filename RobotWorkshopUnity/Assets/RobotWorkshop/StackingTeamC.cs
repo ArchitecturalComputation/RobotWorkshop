@@ -18,7 +18,7 @@ public class StackingTeamC : IStackable
     public StackingTeamC(Mode mode)
     {
         _camera = mode == Mode.Virtual ? new TeamCVirtualCamera() as ICamera : new LiveCamera() as ICamera;
-        //MakePickTower();
+        
     }
 
     bool CheckCamera(IList<Orient> tiles)
@@ -44,10 +44,9 @@ public class StackingTeamC : IStackable
 
         if (_placeTiles.Count == 0)
         {
-            // definig place area and scaning
             var scanRect = new Rect(1.4f * 0.25f + m, 0 + m, 1.4f * 0.75f - m * 2, 0.8f - m * 2);
             var scanTiles = _camera.GetTiles(scanRect);
-            if (!CheckCamera(scanTiles)) return null; // checking if camera is working
+            if (!CheckCamera(scanTiles)) return null;
             if (scanTiles.Count > 1)
             {
                 Message = "Place a single tile on the next row and press 'start loop'.";
@@ -57,7 +56,6 @@ public class StackingTeamC : IStackable
             _placeTiles = CreateRow(scanTiles.First(), scanRect.center);
         }
 
-        // definig pick area and scaning
         var pickRect = new Rect(0 + m, 0 + m, 1.4f * 0.25f - m * 2, 0.8f - m * 2);
         var pickTiles = _camera.GetTiles(pickRect);
         if (!CheckCamera(pickTiles)) return null;
@@ -73,41 +71,57 @@ public class StackingTeamC : IStackable
 
     List<Orient> CreateRow(Orient orient, Vector3 center)
     {
+        var allBlocks = new List<Orient>();
+        var block1 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
         
-        throw new NotImplementedException("To be implemented by team C.");
+        var block2 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
+        var block3 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
+        var block4 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
+        var block5 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
+        var block6 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
+        var block7 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
+        var block8 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
         
-     
-        // var radius = Math.Sqrt(Math.Pow(center.x - tiles.x, 2.0) - Math.Pow(center.y - Tiles.y, 2.0));
-        // var brickNum = Math.PI / Math.Atan(0.18f / 2*radius); // PI/(Atan(a/2*r) = N
-        //var perimeter = 2 * Math.PI * radius;
-        // var roAngle = 360 / brickNum; //rotating angle between bricks.
-        // var newTile = orient.RotateAround(center, (float)roAngle); 
+        allBlocks.Add(block1);
+        Vector3 firstPlace = new Vector3 (0.5f,0.5f,0f);
+        Vector3 tableCenter = new Vector3(0.7f, 0.4f, 0f);
+        var Redius = Vector3.Distance (firstPlace, tableCenter);
+        var tileNumber = (2 * Math.PI * Redius) / (0.18 * 1.2);
+        for (int i=0;i<8;i++) {
+            var newTile = orient.RotateAround(tableCenter, (float)(360 / tileNumber));
+            allBlocks.Add(newTile);
+        } 
+        return allBlocks;
+
     }
 }
+
+
 
 class TeamCVirtualCamera : ICamera
 {
     Queue<Orient[]> _sequence;
+
     public TeamCVirtualCamera()
     {
         var t = new[]
         {
-           new Orient(0.1f,0.045f,0.3f,90.0f), //layer 1
-           new Orient(0.2f,0.045f*2,0.1f,30.0f), //layer 2
+           new Orient(0.1f,0.045f,0.3f,90.0f),
+           new Orient(0.2f,0.045f*2,0.1f,30.0f),
            new Orient(0.1f,0.045f,0.5f,90)
         };
 
         _sequence = new Queue<Orient[]>(new[]
         {
            new[] {t[0]},
-           new[] {t[2]},
-           new[] {t[2]},
-           new[] {t[2]},
-           new[] {t[2]},
-           new[] {t[2]},
-           new[] {t[2]},
-           new[] {t[2]},
-           new[] {t[2]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
            new Orient[0]
         });
     }
