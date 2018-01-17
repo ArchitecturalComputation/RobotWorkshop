@@ -38,9 +38,9 @@ public class Robot : MonoBehaviour
         _selectedMaterial.color = Color.red;
 
          _retract = true;
-        _stackable = new StackingFillAndBuild(_mode); // Team A
+        //_stackable = new StackingFillAndBuild(_mode); // Team A
         // _stackable = new StackingTeamBBJT(_mode); // Team BBJT
-        // _stackable = new StackingTeamC(_mode); // Team C
+         _stackable = new StackingTeamC(_mode); // Team C
     }
 
     async void StartLoop()

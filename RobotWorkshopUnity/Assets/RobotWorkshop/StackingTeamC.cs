@@ -18,7 +18,7 @@ public class StackingTeamC : IStackable
     public StackingTeamC(Mode mode)
     {
         _camera = mode == Mode.Virtual ? new TeamCVirtualCamera() as ICamera : new LiveCamera() as ICamera;
-        
+
     }
 
     bool CheckCamera(IList<Orient> tiles)
@@ -73,24 +73,20 @@ public class StackingTeamC : IStackable
     {
         var allBlocks = new List<Orient>();
         var block1 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
-        
-        var block2 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
-        var block3 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
-        var block4 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
-        var block5 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
-        var block6 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
-        var block7 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
-        var block8 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
-        
+      
         allBlocks.Add(block1);
-        Vector3 firstPlace = new Vector3 (0.5f,0.5f,0f);
-        Vector3 tableCenter = new Vector3(0.7f, 0.4f, 0f);
-        var Redius = Vector3.Distance (firstPlace, tableCenter);
-        var tileNumber = (2 * Math.PI * Redius) / (0.18 * 1.2);
-        for (int i=0;i<8;i++) {
-            var newTile = orient.RotateAround(tableCenter, (float)(360 / tileNumber));
+     
+        var radius = Vector3.Distance(orient.Center, center);
+        var tileNumberf = (2 * Mathf.PI * radius) / (0.18f * 1.2f);
+        int tileNumber = (int)Mathf.Floor(tileNumberf);
+
+        for (int i = 1; i < tileNumber; i++)
+        {
+            var angle = 360 / (float)tileNumber;
+            var newTile = orient.RotateAround(center, i*angle);
             allBlocks.Add(newTile);
-        } 
+        }
+
         return allBlocks;
 
     }
@@ -107,24 +103,44 @@ class TeamCVirtualCamera : ICamera
         var t = new[]
         {
            new Orient(0.1f,0.045f,0.3f,90.0f),
-           new Orient(0.2f,0.045f*2,0.1f,30.0f),
-           new Orient(0.1f,0.045f,0.5f,90)
+           allBlocks.get[0],
+           allBlocks.get[1],
+           allBlocks.get[2],
+           allBlocks.get[3],
+           allBlocks.get[4],
+           allBlocks.get[5],
+
+
+           //new Orient(0.2f,0.045f*2,0.1f,30.0f),
+           //new Orient(0.1f,0.045f,0.5f,90)
         };
 
         _sequence = new Queue<Orient[]>(new[]
         {
            new[] {t[0]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
+         
+          
+           new[] {t[0],t[1]},
+           new[] {t[0],t[1],t[2]},
+           new[] {t[0],t[1],t[2]},
+           new[] {t[0],, },
+
+            /*
+           new[] {t[2]},
            new[] {t[3]},
            new[] {t[3]},
            new[] {t[3]},
            new[] {t[3]},
            new[] {t[3]},
            new Orient[0]
+           */
         });
     }
+
+
+
+
+
 
     public IList<Orient> GetTiles(Rect area)
     {
