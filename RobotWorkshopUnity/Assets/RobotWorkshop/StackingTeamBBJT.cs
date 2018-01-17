@@ -12,7 +12,7 @@ public class StackingTeamBBJT : IStackable
     readonly float _gap = 0.005f;
     readonly Rect _rect;
     readonly ICamera _camera;
-
+    
     List<Orient> _placeTiles = new List<Orient>();
     int _tileCount = 0;
 
@@ -23,19 +23,17 @@ public class StackingTeamBBJT : IStackable
     }
 
     bool CheckCamera(IList<Orient> tiles)
-    {
-        if (tiles.Count == 0)
-        {
-            Message = "No tiles left.";
-            return false;
-        }
-
+    {   
         if (tiles == null)
         {
             Message = "Camera error.";
             return false;
         }
-
+        if (tiles.Count == 0)
+        {
+            Message = "No tiles left.";
+            return false;
+        }
         return true;
     }
 
@@ -44,25 +42,23 @@ public class StackingTeamBBJT : IStackable
     public Orient[] GetNextTargets()
     {
         float m = 0.02f;
-
         if (_placeTiles.Count == 0)
         {
             var scanRect = new Rect(1.4f * 0.25f + m, 0 + m, 1.4f * 0.75f - m * 2, 0.8f - m * 2);
             var scanTiles = _camera.GetTiles(scanRect);
-            if (!CheckCamera(scanTiles)) return null;
+            if (!CheckCamera(scanTiles)) return null; 
 
-           var _midpoint =  Midpoint(scanTiles); //NEW
+            var _midpoint = midpoint(scanTiles);
 
-            for (int i = 1; i < 10; i++)
-            {
+            for (int i = 1; i < 15; i++)
+            { 
                 foreach (var tile in scanTiles)
-                {
-                    var nextTile = TowerLocation(i, tile, _midpoint);
+                {  
+                    var nextTile = TowerLocation(i, tile,_midpoint);
                     _placeTiles.Add(nextTile);
                 }
             }
-
-            _firstScan = scanTiles; //remove later;
+            _firstScan = scanTiles; //remove later; (why?)
         }
 
         if (_tileCount >= _placeTiles.Count)
@@ -70,18 +66,17 @@ public class StackingTeamBBJT : IStackable
             Message = "Finished building towers.";
             return null;
         }
-
         var pickRect = new Rect(0 + m, 0 + m, 1.4f * 0.25f - m * 2, 0.8f - m * 2);
         var pickTiles = _camera.GetTiles(pickRect);
         if (!CheckCamera(pickTiles)) return null;
 
-        var pick = pickTiles.First();
-        var place = _placeTiles[_tileCount];
-        _tileCount++;
+        var pick = pickTiles.First(); 
+        var place = _placeTiles[_tileCount]; 
+        _tileCount++; 
 
         Message = $"Placing tile {_tileCount} out of {_placeTiles.Count}";
-        return new[] { pick, place }
-        .Concat(_placeTiles).ToArray();
+        return new[] { pick, place } 
+        .Concat(_placeTiles).ToArray(); 
     }
 
     Orient TowerLocation(int index, Orient location, Vector3 midpoint)
@@ -91,48 +86,44 @@ public class StackingTeamBBJT : IStackable
         int row = count % 2;
         bool isEven = layer % 2 == 0;
 
-        Vector3 position = new Vector3(0, (layer) * _tileSize.y, (row * 2 - 1) * _tileSize.z);
-        
-
-        var rotation = Quaternion.Euler(0, isEven ? 0 : -90, 0);
-        var tile = new Orient(rotation * position, rotation);
+        Vector3 position = new Vector3(0, (layer) * _tileSize.y, (row * 2 - 1) * _tileSize.z);//a.
+        var rotation = Quaternion.Euler(0, isEven ? 0 : -90, 0); //b.
+        var tile = new Orient(rotation*position, rotation); //c.
 
         tile.Center = location.Rotation * tile.Center;
         tile.Rotation = location.Rotation * tile.Rotation;
-        
-        // twisting tiles
+
         Orient tilt = new Orient(0, 0, 0, 8f * layer);
         tile = tile.Transform(tilt);
 
         tile.Center += location.Center + location.Rotation * Vector3.forward * _tileSize.z;
 
-        var toMiddle = TowardsMiddle(midpoint, tile.Center) * layer;
+        var toMiddle = towardsMiddle(midpoint, tile.Center) * layer;
         tile.Center.z += toMiddle.z;
         tile.Center.x += toMiddle.x;
-
-        //test
-
+     
         return tile;
 
-    Vector3 Midpoint(IList<Orient> startTiles)
+    }
+
+    Vector3 midpoint(IList<Orient> startTiles)
     {
         Vector3 sum = Vector3.zero;
-
         foreach (var tile in startTiles)
         {
             sum += tile.Center;
         }
-
         return sum / startTiles.Count;
     }
 
-    Vector3 TowardsMiddle(Vector3 midpoint, Vector3 position)
+    Vector3 towardsMiddle(Vector3 midpoint, Vector3 position)
     {
-        var vector = midpoint - position;
-        var distance = Mathf.Min(vector.magnitude, 0.015f);
 
-        //return position + vector.normalized * distance;
-        return vector.normalized * distance;
+        var vector = midpoint - position;
+        var stepDistance = 0.025f;
+        var distance = Mathf.Min(vector.magnitude, stepDistance);//
+        
+        return vector.normalized* distance;
     }
 }
 
@@ -144,14 +135,15 @@ class TeamBBJTVirtualCamera : ICamera
     {
         var t = new[]
         {
-           new Orient(0.6f,0.045f,0.4f,45),
-           new Orient(0.9f,0.045f,0.2f,20),
-           new Orient(0.45f,0.045f,0.5f,45),
+           new Orient(0.7f, 0.045f, 0.3f, 45),
+           new Orient(0.5f, 0.045f, 0.6f, 20),
+           new Orient(0.8f, 0.045f, 0.6f, 0),
            new Orient(0.1f,0.045f,0.5f,90)
         };
 
         _sequence = new Queue<Orient[]>(new[]
         {
+ 
            new[] {t[0],t[1],t[2]},
            new[] {t[3]},
            new[] {t[3]},
