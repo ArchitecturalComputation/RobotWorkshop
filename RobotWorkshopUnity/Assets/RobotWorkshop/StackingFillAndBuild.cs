@@ -100,12 +100,16 @@ public class StackingFillAndBuild : IStackable
     {
         int index;
         int arr_size;
-        float x, z, angle;
+        float x, z;
+        public float angle;
         float[] dist_between;
         float[] vector_angle;
         float[,] angle_diff;
+        public Vector3 Center;
+
         public Block(int this_index, Orient ori, int block_count)
         {
+            Center = ori.Center;
             index = this_index;
             x = ori.Center.x;
             z = ori.Center.z;
@@ -312,6 +316,48 @@ public class StackingFillAndBuild : IStackable
 
         Debug.Log(string.Format("Block {0} location: {1:0.000}, {2:0.000}, {3:0.000}, {4:00}", existing_blocks.Count + 1, new_block_x, new_block_y, new_block_z, angle));
         return new_block;
+    }
+
+    //function for finding the arch positions and rotations
+    public Orient[] ArchPositions(int ABlock, int BBlock)
+    {
+        Block A = block_arr[ABlock];
+        Block B = block_arr[BBlock];
+
+        Vector3 AB = A.Center - B.Center;
+        float ABdist = AB.magnitude;
+
+        int num;
+        Orient[] arch;
+        float[] placements;
+
+        if (ABdist > 350 && ABdist < 400)
+        {
+            num = 5;
+            placements = new[] { 0.05f, 0.2f, 0.5f, 0.8f, 0.95f };
+        }
+        else if (ABdist > 400 && ABdist < 450)
+        {
+            num = 7;
+            placements = new[] { 0.03f, 0.11f, 0.27f, 0.5f, 0.73f, 0.89f, 0.97f };
+        }
+        else
+        {
+            return null;
+        }
+
+        arch = new Orient[num];
+
+        for (int i = 0; i < num; i++)
+        {
+            Vector3 pos;
+            float rot;
+            pos = A.Center + placements[i] * AB;
+            rot = ((num - i) / (num + 1)) * A.angle + ((i + 1) / (num + 1)) * B.angle;
+            arch[i] = new Orient(pos.x, pos.y, pos.z, rot);
+        }
+
+        return arch;
     }
 
     class TeamAVirtualCamera : ICamera
