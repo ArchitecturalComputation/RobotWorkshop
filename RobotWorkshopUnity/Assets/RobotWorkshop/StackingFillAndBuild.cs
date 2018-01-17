@@ -18,7 +18,9 @@ public class StackingFillAndBuild : IStackable
     readonly Rect _place_area;
     readonly ICamera _camera;
     bool _instantiate_block = false;
+    bool _camera_used = false;
     Block[] block_arr;
+    List<int[][]> _block_pairs = new List<int[][]>();
 
     public StackingFillAndBuild(Mode mode)
     {
@@ -50,7 +52,12 @@ public class StackingFillAndBuild : IStackable
         if (_placed_blocks.Count < _bottom_layer_blocks)
         {
             _placed_bottom_layer = place_top;
-            _placed_blocks = place_top;
+            if (_camera_used == false)
+            {
+                Debug.Log("Place camera used");
+                _placed_blocks = place_top;
+                _camera_used = true;
+            }
             Message = $"Placing block {_placed_blocks.Count + 1} out of {_bottom_layer_blocks} on bottom layer";
             place = FarthestLocation(_placed_blocks);
         }
@@ -82,6 +89,8 @@ public class StackingFillAndBuild : IStackable
         _placed_blocks.Add(place);
         _pick_blocks.Remove(pick);
 
+        // reset _camera_used to false to use the camera every loop, otherwise comment out
+        _camera_used = false;
         return targets_w_placed_arr;
     }
 
@@ -114,7 +123,7 @@ public class StackingFillAndBuild : IStackable
         }
 
         // compares all other Blocks to this Block, and returns Block pairs with dist and angle below limit
-        public int[,] get_block_pair(float dist_limit, float angle_limit)
+        public int[][] get_block_pair(float dist_limit, float angle_limit)
         {
             int valid_count = 0;
             List<int> valid_index = new List<int>();
@@ -137,11 +146,15 @@ public class StackingFillAndBuild : IStackable
             {
                 Debug.Log($"Block {index}, {valid_count} pairs of block pairs within dist {dist_limit}, angle {angle_limit}");
 
-                int[,] valid_block_pair = new int[valid_count, 2];
+                int[][] valid_block_pair = new int[valid_count][];
                 for (int i = 0; i < valid_index.Count; i++)
                 {
-                    valid_block_pair[i, 0] = this.index;
-                    valid_block_pair[i, 1] = valid_index[i];
+                    valid_block_pair[i] = new int[2];
+                }
+                for (int i = 0; i < valid_index.Count; i++)
+                {
+                    valid_block_pair[i][0] = this.index;
+                    valid_block_pair[i][1] = valid_index[i];
                     Debug.Log($"Block pair {index}, {valid_index[i]}");
                 }
                 return valid_block_pair;
@@ -169,6 +182,8 @@ public class StackingFillAndBuild : IStackable
         }
     }
 
+    // Note to Vicente - I am having trouble getting the list of "block pairs" into a single list, the method "get_block_pair" compares 
+    // a Block to all the other Blocks and returns a jadded array with the index of the pair of blocks that are within the distance and rotation limits
     Orient BuildArches(IList<Orient> bot_blocks, IList<Orient> top_blocks, int current_block_layer)
     {
         float new_block_x = 0;                              // x coordinate of new block
@@ -177,7 +192,6 @@ public class StackingFillAndBuild : IStackable
         float angle = 0;
         int num_pairs = 0;
         // int target_pairs = 3;
-        List<int[,]> block_pairs = new List<int[,]>();
 
         // store distances and angles between all blocks, runs only once
         if (_instantiate_block == false) {
@@ -195,16 +209,25 @@ public class StackingFillAndBuild : IStackable
                     block_arr[i].block_compare(block_arr[j], j);
                 }
             }
-            for (int t = 0; t < 4; t++)
+            // Note to Vicente - here is where I am trying to get the valid block pairs into the list _block_pairs, ideally without repetition but does not work yet
+            for (int t = 0; t <= 5; t++)
             {
                 float dist_limit = 0.4f - (0.00f * t);
-                float rota_limit = 10f + (10f * t);
+                float rota_limit = 10f + (5f * t);
                 for (int i = 0; i < bot_blocks.Count; i++)
                 {
-                    block_pairs.Add(block_arr[i].get_block_pair(dist_limit, rota_limit));
-                    num_pairs += block_pairs.Count;
+                    var new_pair = block_arr[i].get_block_pair(dist_limit, rota_limit);
+                    if (!_block_pairs.Contains(new_pair)) 
+                    {
+                        _block_pairs.Add(new_pair);
+                        num_pairs++;
+                    }
                 }
             }
+            // for (int i = 0; i < _block_pairs.Count; i++)
+            // {
+            //     Debug.Log($"{_block_pairs[i][0]}, {_block_pairs[i][1]} is in _block_pairs");
+            // }
 
             _instantiate_block = true;
         }
