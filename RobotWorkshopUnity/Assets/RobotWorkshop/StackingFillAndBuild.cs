@@ -6,24 +6,26 @@ public class StackingFillAndBuild : IStackable
 {
     public string Message { get; set; }
 
-    int _bottom_layer_blocks = 10;
+    int _bottom_layer_blocks = 12;
     int _max_total_blocks = 20;
     int _current_block_layer = 1;
 
     IList<Orient> _pick_blocks = new List<Orient>();
     IList<Orient> _placed_blocks = new List<Orient>();
     IList<Orient> _placed_bottom_layer = new List<Orient>();
-    IList<Orient> _placed_top_layer = new List<Orient>();
+    // IList<Orient> _placed_top_layer = new List<Orient>();
     readonly Rect _pick_area;
     readonly Rect _place_area;
     readonly ICamera _camera;
+    bool _instantiate_block = false;
+    Block[] block_arr;
 
     public StackingFillAndBuild(Mode mode)
     {
 
         float m = 0.02f;
-        _pick_area = new Rect(0 + m, 0 + m, 0.4f - 2 * m, 0.8f - 2 * m);
-        _place_area = new Rect(0.4f + m, 0 + m, 1.0f - 2 * m, 0.8f - 2 * m);
+        _pick_area = new Rect(0 + m, 0 + m, 0.4f - m, 0.8f - m);
+        _place_area = new Rect(0.4f + m, 0 + m, 1.0f - m, 0.8f - m);
         _camera = mode == Mode.Virtual ? new TeamAVirtualCamera() as ICamera : new LiveCamera() as ICamera;
     }
 
@@ -31,7 +33,15 @@ public class StackingFillAndBuild : IStackable
     {
         IList<Orient> pick_top = _camera.GetTiles(_pick_area);
         IList<Orient> place_top = _camera.GetTiles(_place_area);
+        Debug.Log($"{pick_top.Count} pick blocks, {place_top.Count} placed blocks detected");
         _pick_blocks = pick_top;
+
+        if (pick_top == null)
+        {
+            Message = "Camera error.";
+            Debug.Log("pick_top = null");
+            return null;
+        }
 
         // Debug.Log(string.Format("_placed_blocks.Count = {0}", _placed_blocks.Count));
         Orient pick = pick_top.Last();
@@ -56,17 +66,15 @@ public class StackingFillAndBuild : IStackable
             return null;
         }
 
-        if (pick_top == null)
+        if (_placed_blocks.Contains(place))
         {
-            Message = "Camera error.";
-            Debug.Log("pick_top = null");
+            Message = "Block already exists, clash detected";
             return null;
         }
 
         if (_pick_blocks.Count == 0)
         {
-            Message = "No tiles left.";
-            Debug.Log("_pick_blocks.Count == 0");
+            Message = "No pick blocks left.";
             return null;
         }
 
@@ -79,13 +87,15 @@ public class StackingFillAndBuild : IStackable
 
     class Block
     {
+        int index;
         int arr_size;
         float x, z, angle;
         float[] dist_between;
         float[] vector_angle;
         float[,] angle_diff;
-        public Block(Orient ori, int block_count)
+        public Block(int this_index, Orient ori, int block_count)
         {
+            index = this_index;
             x = ori.Center.x;
             z = ori.Center.z;
             angle = ori.Rotation.eulerAngles.y;
@@ -98,19 +108,64 @@ public class StackingFillAndBuild : IStackable
             {
                 dist_between[i] = 0;
                 vector_angle[i] = 360;
-                angle_diff[i, 0] = 360;
-                angle_diff[i, 1] = 360;
+                angle_diff[i, 0] = 90;
+                angle_diff[i, 1] = 90;
             }
         }
 
-        public void block_compare(Block other_block, int index)
+        // compares all other Blocks to this Block, and returns Block pairs with dist and angle below limit
+        public int[,] get_block_pair(float dist_limit, float angle_limit)
+        {
+            int valid_count = 0;
+            List<int> valid_index = new List<int>();
+            for (int i = 0; i < arr_size; i++)
+            {
+                if (i != index)
+                {
+                    if (dist_between[i] < dist_limit)
+                    {
+                        if (angle_diff[i,0] < angle_limit && angle_diff[i,1] < angle_limit)
+                        {
+                            valid_count++;
+                            valid_index.Add(i);
+                        }
+                    }
+                }
+            }
+
+            if (valid_count > 0)
+            {
+                Debug.Log($"Block {index}, {valid_count} pairs of block pairs within dist {dist_limit}, angle {angle_limit}");
+
+                int[,] valid_block_pair = new int[valid_count, 2];
+                for (int i = 0; i < valid_index.Count; i++)
+                {
+                    valid_block_pair[i, 0] = this.index;
+                    valid_block_pair[i, 1] = valid_index[i];
+                    Debug.Log($"Block pair {index}, {valid_index[i]}");
+                }
+                return valid_block_pair;
+            }
+            return null;
+        }
+
+        public void block_compare(Block other_block, int other_index)
         {
             float d_x = this.x - other_block.x;
             float d_z = this.z - other_block.z;
-            dist_between[index] = Mathf.Sqrt(d_x * d_x + d_z * d_z);
-            vector_angle[index] = -Mathf.Rad2Deg * Mathf.Atan2(d_z, d_x);
-            angle_diff[index, 0] = this.angle - vector_angle[index];
-            angle_diff[index, 1] = other_block.angle - vector_angle[index];
+            dist_between[other_index] = Mathf.Sqrt(d_x * d_x + d_z * d_z);
+            vector_angle[other_index] = -Mathf.Rad2Deg * Mathf.Atan2(d_z, d_x);
+            // Work out difference in angles between blocks, wrap around 180
+            angle_diff[other_index, 0] = (this.angle - vector_angle[other_index] + 360) % 180;
+            if (angle_diff[other_index, 0] > 90)
+            {
+                angle_diff[other_index, 0] = 180 - angle_diff[other_index, 0];
+            }
+            angle_diff[other_index, 1] = (other_block.angle - vector_angle[other_index] + 360) % 180;
+            if (angle_diff[other_index, 1] > 90)
+            {
+                angle_diff[other_index, 1] = 180 - angle_diff[other_index, 1];
+            }
         }
     }
 
@@ -120,19 +175,38 @@ public class StackingFillAndBuild : IStackable
         float new_block_z = 0;                              // z coordinate of new block
         float new_block_y = 0.045f * current_block_layer + 0.02f;   // y (height) of new block + tolerance
         float angle = 0;
+        int num_pairs = 0;
+        // int target_pairs = 3;
+        List<int[,]> block_pairs = new List<int[,]>();
 
-        // store distances and angles between all blocks
-        Block[] block_arr = new Block[bot_blocks.Count];
-        for (int i = 0; i < bot_blocks.Count; i++)
-        {
-            block_arr[i] = new Block(bot_blocks[i], bot_blocks.Count);
-        }
-        for (int i = 0; i < bot_blocks.Count; i++)
-        {
-            for (int j = 0; j < bot_blocks.Count; j++)
+        // store distances and angles between all blocks, runs only once
+        if (_instantiate_block == false) {
+            block_arr = new Block[bot_blocks.Count];
+
+            for (int i = 0; i < bot_blocks.Count; i++)
             {
-                block_arr[i].block_compare(block_arr[j], j);
+                block_arr[i] = new Block(i, bot_blocks[i], bot_blocks.Count);
             }
+
+            for (int i = 0; i < bot_blocks.Count; i++)
+            {
+                for (int j = 0; j < bot_blocks.Count; j++)
+                {
+                    block_arr[i].block_compare(block_arr[j], j);
+                }
+            }
+            for (int t = 0; t < 4; t++)
+            {
+                float dist_limit = 0.4f - (0.00f * t);
+                float rota_limit = 10f + (10f * t);
+                for (int i = 0; i < bot_blocks.Count; i++)
+                {
+                    block_pairs.Add(block_arr[i].get_block_pair(dist_limit, rota_limit));
+                    num_pairs += block_pairs.Count;
+                }
+            }
+
+            _instantiate_block = true;
         }
 
         Vector3 position = new Vector3(new_block_x, new_block_y, new_block_z);
@@ -239,6 +313,7 @@ public class StackingFillAndBuild : IStackable
             foreach (var block in init_blocks)
             {
                 _placed_blocks.Add(block);
+                Debug.Log(string.Format("Initial block location: {0:0.000}, {1:0.000}, {2:0.000}, {3:00}", block.Center.x, block.Center.y, block.Center.z, block.Rotation.eulerAngles.y));
             }
         }
 

@@ -148,7 +148,7 @@ MODULE AutoPickAndPlace
 
         ! retract for camera
         IF inBlock.info=2 THEN
-            MoveL [[place.trans.x,40,place.trans.z+offset],neutral,[1,1,0,0],exj],speed3,zone3,gripper\WObj:=frame;
+            MoveL [[place.trans.x,100,place.trans.z+offset],neutral,[1,1,0,0],exj],speed3,zone3,gripper\WObj:=frame;
         ENDIF
 
     ENDPROC
