@@ -77,11 +77,11 @@ public class StackingTeamC : IStackable
         throw new NotImplementedException("To be implemented by team C.");
         
      
-        var radius = Math.Sqrt(Math.Pow(center.x - tiles.x, 2.0) - Math.Pow(center.y - Tiles.y, 2.0));
-        var brickNum = Math.PI / Math.Atan(0.18f / 2*radius); // PI/(Atan(a/2*r) = N
+        // var radius = Math.Sqrt(Math.Pow(center.x - tiles.x, 2.0) - Math.Pow(center.y - Tiles.y, 2.0));
+        // var brickNum = Math.PI / Math.Atan(0.18f / 2*radius); // PI/(Atan(a/2*r) = N
         //var perimeter = 2 * Math.PI * radius;
-        var roAngle = 360 / brickNum; //rotating angle between bricks.
-        var newTile = orient.RotateAround(center, (float)roAngle); 
+        // var roAngle = 360 / brickNum; //rotating angle between bricks.
+        // var newTile = orient.RotateAround(center, (float)roAngle); 
     }
 }
 
