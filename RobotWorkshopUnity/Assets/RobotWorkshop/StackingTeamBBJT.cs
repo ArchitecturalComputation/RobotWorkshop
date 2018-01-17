@@ -99,6 +99,10 @@ public class StackingTeamBBJT : IStackable
 
         tile.Center = location.Rotation * tile.Center;
         tile.Rotation = location.Rotation * tile.Rotation;
+        
+        // twisting tiles
+        Orient tilt = new Orient(0, 0, 0, 8f * layer);
+        tile = tile.Transform(tilt);
 
         tile.Center += location.Center + location.Rotation * Vector3.forward * _tileSize.z;
 
@@ -109,37 +113,6 @@ public class StackingTeamBBJT : IStackable
         //test
 
         return tile;
-
-        ////tile.Center = towardsMiddle(midpoint, tile.Center);
-
-        ////tile.Rotation.y = Quaternion.FromToRotation(tile.Center, midpoint).y;
-
-        //var rotateMiddle = Quaternion.FromToRotation(tile.Center, toMiddle);
-
-        //Orient move = new Orient(tile.Center.x, tile.Center.y, tile.Center.z, rotateMiddle.y);
-
-        //tile = tile.Transform(move);
-
-        // Vector3 _midpoint = midpoint(startTiles);
-
-        //var rotation = Quaternion.Euler(0, evenLayer ? 0 : -90, 0);
-        //rotation = rotation * startRotation;
-
-        //Vector3 toMiddle = towardsMiddle(_midpoint, startPosition);
-
-        //Vector3 position = new Vector3(toMiddle.x * layer, (layer + 1) * _tileSize.y, (row - 0.5f) * (_tileSize.z * 2) + (toMiddle.z * layer));
-        //position = (startRotation * position) + startPosition;
-
-        //if (!evenLayer)
-        //{
-        //    Vector3 move = new Vector3(-0.12f * row + 0.06f, 0, -0.12f * row + 0.06f);
-        //    position = startRotation * move + position;
-        //}
-
-        //return new Orient(position, rotation);
-    }
-
-
 
     Vector3 Midpoint(IList<Orient> startTiles)
     {
