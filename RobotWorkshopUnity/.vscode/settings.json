@@ -18,6 +18,7 @@
         "**/*.midi":true,
         "**/*.wav":true,
         "**/*.gif":true,
+        "**/*.guiskin":true,
         "**/*.ico":true,
         "**/*.jpg":true,
         "**/*.jpeg":true,

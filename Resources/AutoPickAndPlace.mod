@@ -7,7 +7,7 @@ MODULE AutoPickAndPlace
     ENDRECORD
 
     PERS tooldata gripper:=[TRUE,[[142.500,0.000,32.500],[0.5000,0.5000,-0.5000,-0.5000]],[2.0,[142.500,0.000,32.500],[1,0,0,0],0,0,0]];
-    TASK PERS wobjdata frame:=[FALSE,TRUE,"",[[510.580,689.920,198.870],[-0.6977,0.0005,0.0022,0.7164]],[[0,0,0],[1,0,0,0]]];
+    TASK PERS wobjdata frame:=[FALSE,TRUE,"",[[504.290,681.790,193.620],[-0.6969,0.0012,0.0021,0.7172]],[[0,0,0],[1,0,0,0]]];
 
     ! PERS string IP:="192.168.0.3";
     PERS string IP:="127.0.0.1";
@@ -148,7 +148,7 @@ MODULE AutoPickAndPlace
 
         ! retract for camera
         IF inBlock.info=2 THEN
-            MoveL [[place.trans.x,40,place.trans.z+offset],neutral,[1,1,0,0],exj],speed3,zone3,gripper\WObj:=frame;
+            MoveL [[place.trans.x,100,place.trans.z+offset],neutral,[1,1,0,0],exj],speed3,zone3,gripper\WObj:=frame;
         ENDIF
 
     ENDPROC
