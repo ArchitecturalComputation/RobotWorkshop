@@ -5,16 +5,20 @@ using System;
 public class StackingTeamC : IStackable
 {
     public string Message { get; set; }
+    public IEnumerable<Orient> Display { get { return _placeTiles; } }
+
     readonly Vector3 _pickPoint = new Vector3(0.2f, 0, 0.4f);
     readonly Vector3 _placePoint = new Vector3(1.2f, 0, 0.4f);
     readonly Vector3 _tileSize = new Vector3(0.18f, 0.045f, 0.06f);
     readonly float _gap = 0.005f;
     readonly ICamera _camera;
     List<Orient> _placeTiles = new List<Orient>();
+
     public StackingTeamC(Mode mode)
     {
         _camera = mode == Mode.Virtual ? new TeamCVirtualCamera() as ICamera : new LiveCamera() as ICamera;
     }
+
     bool CheckCamera(IList<Orient> tiles)
     {
         if (tiles.Count == 0)
@@ -29,7 +33,8 @@ public class StackingTeamC : IStackable
         }
         return true;
     }
-    public Orient[] GetNextTargets()
+
+    public PickAndPlaceData GetNextTargets()
     {
         float m = 0.02f;
 
@@ -53,9 +58,10 @@ public class StackingTeamC : IStackable
         var place = _placeTiles.First();
         _placeTiles.RemoveAt(0);
         Message = $"{_placeTiles.Count} tiles remaining in the row";
-        return new[] { pick, place }
-        .Concat(_placeTiles).ToArray();
+
+        return new PickAndPlaceData { Pick = pick, Place = place };
     }
+
     List<Orient> CreateRow(Orient orient, Vector3 center)
     {
         var allBlocks = new List<Orient>();
@@ -71,6 +77,7 @@ public class StackingTeamC : IStackable
         return allBlocks;
     }
 }
+
 class TeamCVirtualCamera : ICamera
 {
     Queue<Orient[]> _sequence;

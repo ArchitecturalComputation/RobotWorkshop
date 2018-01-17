@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class StackingTeamBBJT : IStackable
 {
-    public string Message { get; set; }
+    public string Message { get; private set; }
+    public IEnumerable<Orient> Display { get { return _placeTiles; } }
 
     readonly Vector3 _pickPoint = new Vector3(0.2f, 0, 0.4f);
     readonly Vector3 _placePoint = new Vector3(1.2f, 0, 0.4f);
@@ -41,7 +42,7 @@ public class StackingTeamBBJT : IStackable
 
     IList<Orient> _firstScan;
 
-    public Orient[] GetNextTargets()
+    public PickAndPlaceData GetNextTargets()
     {
         float m = 0.02f;
 
@@ -51,7 +52,7 @@ public class StackingTeamBBJT : IStackable
             var scanTiles = _camera.GetTiles(scanRect);
             if (!CheckCamera(scanTiles)) return null;
 
-           var _midpoint =  Midpoint(scanTiles); //NEW
+            var _midpoint = Midpoint(scanTiles); //NEW
 
             for (int i = 1; i < 10; i++)
             {
@@ -80,8 +81,8 @@ public class StackingTeamBBJT : IStackable
         _tileCount++;
 
         Message = $"Placing tile {_tileCount} out of {_placeTiles.Count}";
-        return new[] { pick, place }
-        .Concat(_placeTiles).ToArray();
+
+        return new PickAndPlaceData { Pick = pick, Place = place };
     }
 
     Orient TowerLocation(int index, Orient location, Vector3 midpoint)
@@ -92,14 +93,14 @@ public class StackingTeamBBJT : IStackable
         bool isEven = layer % 2 == 0;
 
         Vector3 position = new Vector3(0, (layer) * _tileSize.y, (row * 2 - 1) * _tileSize.z);
-        
+
 
         var rotation = Quaternion.Euler(0, isEven ? 0 : -90, 0);
         var tile = new Orient(rotation * position, rotation);
 
         tile.Center = location.Rotation * tile.Center;
         tile.Rotation = location.Rotation * tile.Rotation;
-        
+
         // twisting tiles
         Orient tilt = new Orient(0, 0, 0, 8f * layer);
         tile = tile.Transform(tilt);
@@ -113,7 +114,7 @@ public class StackingTeamBBJT : IStackable
         //test
 
         return tile;
-
+    }
     Vector3 Midpoint(IList<Orient> startTiles)
     {
         Vector3 sum = Vector3.zero;

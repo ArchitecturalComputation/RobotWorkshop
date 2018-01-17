@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class StackingVisionReplicate : IStackable
 {
-    public string Message { get; set; }
+    public string Message { get; private set; }
+    public IEnumerable<Orient> Display { get; }
 
     readonly Vector3 _placePoint = new Vector3(0.9f, 0, 0.4f);
     readonly Vector3 _tileSize = new Vector3(0.18f, 0.045f, 0.06f);
@@ -22,7 +23,7 @@ public class StackingVisionReplicate : IStackable
         _rect = new Rect(0 + m, 0 + m, 0.7f - m * 2, 0.8f - m * 2);
     }
 
-    public Orient[] GetNextTargets()
+    public PickAndPlaceData GetNextTargets()
     {
         if (_isScanning)
         {
@@ -34,7 +35,7 @@ public class StackingVisionReplicate : IStackable
         }
     }
 
-    Orient[] RememberBlocks()
+    PickAndPlaceData RememberBlocks()
     {
         var topLayer = Motive.GetTiles(_rect);
 
@@ -55,16 +56,16 @@ public class StackingVisionReplicate : IStackable
         _pickTiles.Add(pick);
         var place = JengaLocation(_tileCount);
         _tileCount++;
-        return new[] { pick, place };
+        return new PickAndPlaceData { Pick = pick, Place = place };
     }
 
-    Orient[] BuildBlocks()
+    PickAndPlaceData BuildBlocks()
     {
         if (_tileCount == 0) return null;
         var pick = JengaLocation(_tileCount - 1);
         var place = _pickTiles[_tileCount - 1];
         _tileCount--;
-        return new[] { pick, place };
+        return new PickAndPlaceData { Pick = pick, Place = place };
     }
 
     Orient JengaLocation(int index)

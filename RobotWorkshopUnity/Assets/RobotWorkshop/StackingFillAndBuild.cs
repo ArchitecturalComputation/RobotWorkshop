@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class StackingFillAndBuild : IStackable
 {
-    public string Message { get; set; }
+    public string Message { get; private set; }
+    public IEnumerable<Orient> Display { get; }
 
     int _bottom_layer_blocks = 12;
     int _max_total_blocks = 20;
@@ -31,7 +32,7 @@ public class StackingFillAndBuild : IStackable
         _camera = mode == Mode.Virtual ? new TeamAVirtualCamera() as ICamera : new LiveCamera() as ICamera;
     }
 
-    public Orient[] GetNextTargets()
+    public PickAndPlaceData GetNextTargets()
     {
         IList<Orient> pick_top = _camera.GetTiles(_pick_area);
         IList<Orient> place_top = _camera.GetTiles(_place_area);
@@ -91,7 +92,8 @@ public class StackingFillAndBuild : IStackable
 
         // reset _camera_used to false to use the camera every loop, otherwise comment out
         _camera_used = false;
-        return targets_w_placed_arr;
+      //  return targets_w_placed_arr;
+        return new PickAndPlaceData { Pick = targets_w_placed_arr[0], Place = targets_w_placed_arr[1], Retract = true };
     }
 
     class Block
