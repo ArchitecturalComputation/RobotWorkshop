@@ -51,11 +51,13 @@ public class StackingTeamBBJT : IStackable
             var scanTiles = _camera.GetTiles(scanRect);
             if (!CheckCamera(scanTiles)) return null;
 
+           var _midpoint =  Midpoint(scanTiles); //NEW
+
             for (int i = 1; i < 10; i++)
             {
                 foreach (var tile in scanTiles)
                 {
-                    var nextTile = TowerLocation(i, tile);
+                    var nextTile = TowerLocation(i, tile, _midpoint);
                     _placeTiles.Add(nextTile);
                 }
             }
@@ -82,7 +84,7 @@ public class StackingTeamBBJT : IStackable
         .Concat(_placeTiles).ToArray();
     }
 
-    Orient TowerLocation(int index, Orient location)
+    Orient TowerLocation(int index, Orient location, Vector3 midpoint)
     {
         int count = index;
         int layer = count / 2;
@@ -90,6 +92,8 @@ public class StackingTeamBBJT : IStackable
         bool isEven = layer % 2 == 0;
 
         Vector3 position = new Vector3(0, (layer) * _tileSize.y, (row * 2 - 1) * _tileSize.z);
+        
+
         var rotation = Quaternion.Euler(0, isEven ? 0 : -90, 0);
         var tile = new Orient(rotation * position, rotation);
 
@@ -97,7 +101,22 @@ public class StackingTeamBBJT : IStackable
         tile.Rotation = location.Rotation * tile.Rotation;
 
         tile.Center += location.Center + location.Rotation * Vector3.forward * _tileSize.z;
+
+        var toMiddle = TowardsMiddle(midpoint, tile.Center) * layer;
+        tile.Center.z += toMiddle.z;
+        tile.Center.x += toMiddle.x;
+
         return tile;
+
+        ////tile.Center = towardsMiddle(midpoint, tile.Center);
+
+        ////tile.Rotation.y = Quaternion.FromToRotation(tile.Center, midpoint).y;
+
+        //var rotateMiddle = Quaternion.FromToRotation(tile.Center, toMiddle);
+
+        //Orient move = new Orient(tile.Center.x, tile.Center.y, tile.Center.z, rotateMiddle.y);
+
+        //tile = tile.Transform(move);
 
         // Vector3 _midpoint = midpoint(startTiles);
 
@@ -120,7 +139,7 @@ public class StackingTeamBBJT : IStackable
 
 
 
-    Vector3 midpoint(List<Orient> startTiles)
+    Vector3 Midpoint(IList<Orient> startTiles)
     {
         Vector3 sum = Vector3.zero;
 
@@ -132,12 +151,13 @@ public class StackingTeamBBJT : IStackable
         return sum / startTiles.Count;
     }
 
-    Vector3 towardsMiddle(Vector3 midpoint, Vector3 position)
+    Vector3 TowardsMiddle(Vector3 midpoint, Vector3 position)
     {
         var vector = midpoint - position;
         var distance = Mathf.Min(vector.magnitude, 0.015f);
 
-        return position + vector.normalized * distance;
+        //return position + vector.normalized * distance;
+        return vector.normalized * distance;
     }
 }
 
