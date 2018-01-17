@@ -92,7 +92,7 @@ public class StackingTeamBBJT : IStackable
 
         tile.Center = location.Rotation * tile.Center;
         tile.Rotation = location.Rotation * tile.Rotation;
-        
+
         Orient tilt = new Orient(0, 0, 0, 8f * layer);
         tile = tile.Transform(tilt);
 
@@ -101,8 +101,9 @@ public class StackingTeamBBJT : IStackable
         var toMiddle = towardsMiddle(midpoint, tile.Center) * layer;
         tile.Center.z += toMiddle.z;
         tile.Center.x += toMiddle.x;
-     
+
         return tile;
+    }
 
     Vector3 Midpoint(IList<Orient> startTiles)
     {
