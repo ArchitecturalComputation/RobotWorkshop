@@ -103,37 +103,23 @@ class TeamCVirtualCamera : ICamera
         var t = new[]
         {
            new Orient(0.1f,0.045f,0.3f,90.0f),
-           allBlocks.get[0],
-           allBlocks.get[1],
-           allBlocks.get[2],
-           allBlocks.get[3],
-           allBlocks.get[4],
-           allBlocks.get[5],
-
-
-           //new Orient(0.2f,0.045f*2,0.1f,30.0f),
-           //new Orient(0.1f,0.045f,0.5f,90)
+           new Orient(0.2f,0.045f*2,0.1f,30.0f),
+           new Orient(0.1f,0.045f,0.5f,90)
         };
 
         _sequence = new Queue<Orient[]>(new[]
         {
            new[] {t[0]},
-         
-          
-           new[] {t[0],t[1]},
-           new[] {t[0],t[1],t[2]},
-           new[] {t[0],t[1],t[2]},
-           new[] {t[0],, },
-
-            /*
            new[] {t[2]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
+           new[] {t[2]},
+           new[] {t[2]},
+           new[] {t[2]},
+           new[] {t[2]},
+           new[] {t[2]},
+           new[] {t[2]},
+           new[] {t[2]},
            new Orient[0]
-           */
+
         });
     }
 
