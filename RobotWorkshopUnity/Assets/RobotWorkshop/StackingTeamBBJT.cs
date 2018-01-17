@@ -51,13 +51,11 @@ public class StackingTeamBBJT : IStackable
             var scanTiles = _camera.GetTiles(scanRect);
             if (!CheckCamera(scanTiles)) return null;
 
-            var _midpoint = midpoint(scanTiles);  //NEW
-
             for (int i = 1; i < 10; i++)
             {
                 foreach (var tile in scanTiles)
                 {
-                    var nextTile = TowerLocation(i, tile, _midpoint);
+                    var nextTile = TowerLocation(i, tile);
                     _placeTiles.Add(nextTile);
                 }
             }
@@ -84,7 +82,7 @@ public class StackingTeamBBJT : IStackable
         .Concat(_placeTiles).ToArray();
     }
 
-    Orient TowerLocation(int index, Orient location, Vector3 midpoint)
+    Orient TowerLocation(int index, Orient location)
     {
         int count = index;
         int layer = count / 2;
@@ -92,8 +90,6 @@ public class StackingTeamBBJT : IStackable
         bool isEven = layer % 2 == 0;
 
         Vector3 position = new Vector3(0, (layer) * _tileSize.y, (row * 2 - 1) * _tileSize.z);
-        Vector3 toMiddle = towardsMiddle(midpoint, position); //NEW
-
         var rotation = Quaternion.Euler(0, isEven ? 0 : -90, 0);
         var tile = new Orient(rotation * position, rotation);
 
@@ -101,8 +97,6 @@ public class StackingTeamBBJT : IStackable
         tile.Rotation = location.Rotation * tile.Rotation;
 
         tile.Center += location.Center + location.Rotation * Vector3.forward * _tileSize.z;
-
-
         return tile;
 
         // Vector3 _midpoint = midpoint(startTiles);
@@ -126,7 +120,7 @@ public class StackingTeamBBJT : IStackable
 
 
 
-    Vector3 midpoint(IList<Orient> startTiles)
+    Vector3 midpoint(List<Orient> startTiles)
     {
         Vector3 sum = Vector3.zero;
 
