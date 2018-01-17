@@ -6,7 +6,7 @@ public class StackingFillAndBuild : IStackable
 {
     public string Message { get; set; }
 
-    int _bottom_layer_blocks = 10;
+    int _bottom_layer_blocks = 12;
     int _max_total_blocks = 20;
     int _current_block_layer = 1;
 
@@ -24,8 +24,8 @@ public class StackingFillAndBuild : IStackable
     {
 
         float m = 0.02f;
-        _pick_area = new Rect(0 + m, 0 + m, 0.4f - 2 * m, 0.8f - 2 * m);
-        _place_area = new Rect(0.4f + m, 0 + m, 1.0f - 2 * m, 0.8f - 2 * m);
+        _pick_area = new Rect(0 + m, 0 + m, 0.4f - m, 0.8f - m);
+        _place_area = new Rect(0.4f + m, 0 + m, 1.0f - m, 0.8f - m);
         _camera = mode == Mode.Virtual ? new TeamAVirtualCamera() as ICamera : new LiveCamera() as ICamera;
     }
 
@@ -33,7 +33,15 @@ public class StackingFillAndBuild : IStackable
     {
         IList<Orient> pick_top = _camera.GetTiles(_pick_area);
         IList<Orient> place_top = _camera.GetTiles(_place_area);
+        Debug.Log($"{pick_top.Count} pick blocks, {place_top.Count} placed blocks detected");
         _pick_blocks = pick_top;
+
+        if (pick_top == null)
+        {
+            Message = "Camera error.";
+            Debug.Log("pick_top = null");
+            return null;
+        }
 
         // Debug.Log(string.Format("_placed_blocks.Count = {0}", _placed_blocks.Count));
         Orient pick = pick_top.Last();
@@ -58,17 +66,15 @@ public class StackingFillAndBuild : IStackable
             return null;
         }
 
-        if (pick_top == null)
+        if (_placed_blocks.Contains(place))
         {
-            Message = "Camera error.";
-            Debug.Log("pick_top = null");
+            Message = "Block already exists, clash detected";
             return null;
         }
 
         if (_pick_blocks.Count == 0)
         {
-            Message = "No tiles left.";
-            Debug.Log("_pick_blocks.Count == 0");
+            Message = "No pick blocks left.";
             return null;
         }
 
@@ -114,25 +120,33 @@ public class StackingFillAndBuild : IStackable
             List<int> valid_index = new List<int>();
             for (int i = 0; i < arr_size; i++)
             {
-                if (dist_between[i] < dist_limit)
+                if (i != index)
                 {
-                    if (angle_diff[i,0] < angle_limit && angle_diff[i,1] < angle_limit)
+                    if (dist_between[i] < dist_limit)
                     {
-                        valid_count++;
-                        valid_index.Add(i);
+                        if (angle_diff[i,0] < angle_limit && angle_diff[i,1] < angle_limit)
+                        {
+                            valid_count++;
+                            valid_index.Add(i);
+                        }
                     }
                 }
             }
-            Debug.Log("valid_count");
 
-            int[,] valid_block_pair = new int[valid_count, 2];
-            for (int i = 0; i < valid_index.Count; i++)
+            if (valid_count > 0)
             {
-                valid_block_pair[i, 0] = this.index;
-                valid_block_pair[i, 1] = valid_index[i];
-                Debug.Log("valid_index[i]");
+                Debug.Log($"Block {index}, {valid_count} pairs of block pairs within dist {dist_limit}, angle {angle_limit}");
+
+                int[,] valid_block_pair = new int[valid_count, 2];
+                for (int i = 0; i < valid_index.Count; i++)
+                {
+                    valid_block_pair[i, 0] = this.index;
+                    valid_block_pair[i, 1] = valid_index[i];
+                    Debug.Log($"Block pair {index}, {valid_index[i]}");
+                }
+                return valid_block_pair;
             }
-            return valid_block_pair;
+            return null;
         }
 
         public void block_compare(Block other_block, int other_index)
@@ -161,6 +175,9 @@ public class StackingFillAndBuild : IStackable
         float new_block_z = 0;                              // z coordinate of new block
         float new_block_y = 0.045f * current_block_layer + 0.02f;   // y (height) of new block + tolerance
         float angle = 0;
+        int num_pairs = 0;
+        // int target_pairs = 3;
+        List<int[,]> block_pairs = new List<int[,]>();
 
         // store distances and angles between all blocks, runs only once
         if (_instantiate_block == false) {
@@ -178,10 +195,15 @@ public class StackingFillAndBuild : IStackable
                     block_arr[i].block_compare(block_arr[j], j);
                 }
             }
-
-            for (int i = 0; i < bot_blocks.Count; i++)
+            for (int t = 0; t < 4; t++)
             {
-                block_arr[i].get_block_pair(0.4f, 10.0f);
+                float dist_limit = 0.4f - (0.00f * t);
+                float rota_limit = 10f + (10f * t);
+                for (int i = 0; i < bot_blocks.Count; i++)
+                {
+                    block_pairs.Add(block_arr[i].get_block_pair(dist_limit, rota_limit));
+                    num_pairs += block_pairs.Count;
+                }
             }
 
             _instantiate_block = true;
