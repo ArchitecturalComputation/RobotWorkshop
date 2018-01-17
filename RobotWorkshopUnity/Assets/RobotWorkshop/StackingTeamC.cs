@@ -18,7 +18,6 @@ public class StackingTeamC : IStackable
     public StackingTeamC(Mode mode)
     {
         _camera = mode == Mode.Virtual ? new TeamCVirtualCamera() as ICamera : new LiveCamera() as ICamera;
-        MakePickTower();
     }
 
     bool CheckCamera(IList<Orient> tiles)
