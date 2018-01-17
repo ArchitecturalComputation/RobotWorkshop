@@ -37,13 +37,14 @@ public class StackingTeamC : IStackable
         {
             var scanRect = new Rect(1.4f * 0.25f + m, 0 + m, 1.4f * 0.75f - m * 2, 0.8f - m * 2);
             var scanTiles = _camera.GetTiles(scanRect);
+            var _center = new Vector3(0.7f,0f,0.4f);
             if (!CheckCamera(scanTiles)) return null;
             if (scanTiles.Count > 1)
             {
                 Message = "Place a single tile on the next row and press 'start loop'.";
                 return null;
             }
-            _placeTiles = CreateRow(scanTiles.First(), scanRect.center);
+            _placeTiles = CreateRow(scanTiles.First(), _center);
         }
         var pickRect = new Rect(0 + m, 0 + m, 1.4f * 0.25f - m * 2, 0.8f - m * 2);
         var pickTiles = _camera.GetTiles(pickRect);
@@ -61,7 +62,7 @@ public class StackingTeamC : IStackable
            var radius = Vector3.Distance(orient.Center, center);
         var tileNumberf = (2 * Mathf.PI * radius) / (0.18f * 1.2f);
         int tileNumber = (int)Mathf.Floor(tileNumberf);
-        for (int i = 1; i < tileNumber; i++)
+        for (int i = 0; i < tileNumber; i++)
         {
             var angle = 360 / (float)tileNumber;
             var newTile = orient.RotateAround(center, i*angle);
@@ -77,9 +78,10 @@ class TeamCVirtualCamera : ICamera
     {
         var t = new[]
         {
-           new Orient(0.1f,0.045f,0.3f,90.0f),
+           new Orient(0.8f,0.045f,0.6f,30f),
            new Orient(0.2f,0.045f*2,0.1f,30.0f),
-           new Orient(0.1f,0.045f,0.5f,90)
+           new Orient(0.1f,0.045f,0.5f,90),           
+           new Orient(0.1f,0.09f,0.5f,90),
         };
         _sequence = new Queue<Orient[]>(new[]
         {
@@ -88,10 +90,10 @@ class TeamCVirtualCamera : ICamera
            new[] {t[2]},
            new[] {t[2]},
            new[] {t[2]},
+           new[] {t[3]},
            new[] {t[2]},
            new[] {t[2]},
-           new[] {t[2]},
-           new[] {t[2]},
+           new[] {t[3]},
            new Orient[0]
         });
     }
