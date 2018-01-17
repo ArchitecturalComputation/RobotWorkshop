@@ -73,7 +73,7 @@ public class StackingTeamC : IStackable
     {
         var allBlocks = new List<Orient>();
         var block1 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
-        /*
+        
         var block2 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
         var block3 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
         var block4 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
@@ -81,14 +81,16 @@ public class StackingTeamC : IStackable
         var block6 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
         var block7 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
         var block8 = new Orient(0.1f, 0.045f, 0.3f, 90.0f);
-        */
+        
         allBlocks.Add(block1);
         Vector3 firstPlace = new Vector3 (0.5f,0.5f,0f);
         Vector3 tableCenter = new Vector3(0.7f, 0.4f, 0f);
         var Redius = Vector3.Distance (firstPlace, tableCenter);
         var tileNumber = (2 * Math.PI * Redius) / (0.18 * 1.2);
-        var newTile = orient.RotateAround(tableCenter, (float) (360/tileNumber));
-        allBlocks.Add(newTile);
+        for (int i=0;i<8;i++) {
+            var newTile = orient.RotateAround(tableCenter, (float)(360 / tileNumber));
+            allBlocks.Add(newTile);
+        } 
         return allBlocks;
 
     }
