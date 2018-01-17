@@ -106,6 +106,8 @@ public class StackingTeamBBJT : IStackable
         tile.Center.z += toMiddle.z;
         tile.Center.x += toMiddle.x;
 
+        //test
+
         return tile;
 
         ////tile.Center = towardsMiddle(midpoint, tile.Center);
