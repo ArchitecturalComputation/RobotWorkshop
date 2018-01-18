@@ -15,26 +15,34 @@ public class StackingTeamBBJT : IStackable
     readonly ICamera _camera;
     
     List<Orient> _placeTiles = new List<Orient>();
+    // tileCount = INDEX;
     int _tileCount = 0;
 
     public StackingTeamBBJT(Mode mode)
     {
+        //defing which mode we are using: virtual = simualtion ; other = real robot
         Message = "Team BBJT stacking tiles";
         _camera = mode == Mode.Virtual ? new TeamBBJTVirtualCamera() as ICamera : new LiveCamera() as ICamera;
     }
 
+    // check camera is run before the code to verify wether the data is correct to start.
+    // the checked data are: 1. tiles.Count
+
     bool CheckCamera(IList<Orient> tiles)
     {   
+        // the camera dont see anything.
         if (tiles == null)
         {
             Message = "Camera error.";
             return false;
         }
+        // there is no tiles in the camera scan
         if (tiles.Count == 0)
         {
             Message = "No tiles left.";
             return false;
         }
+
         return true;
     }
 
@@ -45,6 +53,8 @@ public class StackingTeamBBJT : IStackable
         float m = 0.02f;
         if (_placeTiles.Count == 0)
         {
+            // defining the placing area
+            //0.75 is the are used for placing the tiles
             var scanRect = new Rect(1.4f * 0.25f + m, 0 + m, 1.4f * 0.75f - m * 2, 0.8f - m * 2);
             var scanTiles = _camera.GetTiles(scanRect);
             if (!CheckCamera(scanTiles)) return null; 
@@ -75,6 +85,7 @@ public class StackingTeamBBJT : IStackable
         var place = _placeTiles[_tileCount]; 
         _tileCount++; 
 
+        // message while constructing
         Message = $"Placing tile {_tileCount} out of {_placeTiles.Count}";
         return new PickAndPlaceData { Pick = pick, Place = place };
     }
@@ -117,15 +128,26 @@ public class StackingTeamBBJT : IStackable
 
     Vector3 towardsMiddle(Vector3 midpoint, Vector3 position)
     {
-
+        // the difference between midpoint and position = distance to get to the center
         var vector = midpoint - position;
-        var stepDistance = 0.025f;
+        float stepDistance;
+
+       // distance = Mathf.Max(vector.magnitude -  0.5f * _tileSize.x -  0.5f * _tileSize.y)
+        if (vector.magnitude < 0.40f)
+        {
+            stepDistance = 0.000f;
+        }
+        else
+        {
+            stepDistance = 0.025f;
+        }
         var distance = Mathf.Min(vector.magnitude, stepDistance);//
-        
         return vector.normalized* distance;
     }
 }
 
+// this virtual camera is replaced by the actual one when we use LiveRobot
+//Cameras are on all the time
 class TeamBBJTVirtualCamera : ICamera
 {
     Queue<Orient[]> _sequence;
@@ -134,9 +156,13 @@ class TeamBBJTVirtualCamera : ICamera
     {
         var t = new[]
         {
+            //bricks place in the placing area = only scaned once.
+            // discribed (x,y,z, rotation in y)
            new Orient(0.7f, 0.045f, 0.3f, 45),
            new Orient(0.5f, 0.045f, 0.6f, 20),
            new Orient(0.8f, 0.045f, 0.6f, 0),
+
+           // brick for placing.
            new Orient(0.1f,0.045f,0.5f,90)
         };
 
