@@ -168,10 +168,6 @@ public class StackingTeamBBJT : IStackable
 
         tile.Center += location.Center + location.Rotation * Vector3.forward * _tileSize.z;
 
-        // var toMiddle = towardsMiddle(midpoint, tile.Center) * layer;
-
-        //  tile.Center.z += toMiddle.z;
-        //  tile.Center.x += toMiddle.x;
 
         return tile;
     }
@@ -184,27 +180,6 @@ public class StackingTeamBBJT : IStackable
             sum += tile.Center;
         }
         return sum / startTiles.Count;
-    }
-
-    Vector3 towardsMiddle(Vector3 midpoint, Vector3 position)
-    {
-        // the difference between midpoint and position = distance to get to the center
-        var vector = midpoint - position;
-        // float stepDistance;
-
-        //// distance = Mathf.Max(vector.magnitude -  0.5f * _tileSize.x -  0.5f * _tileSize.y)
-        // if (vector.magnitude < 0.40f)
-        // {
-        //     stepDistance = 0.000f;
-        // }
-        // else
-        // {
-        //     stepDistance = 0.025f;
-        // }
-
-        var stepDistance = 0.025f;
-        var distance = Mathf.Min(vector.magnitude, stepDistance);
-        return vector.normalized * distance;
     }
 }
 
