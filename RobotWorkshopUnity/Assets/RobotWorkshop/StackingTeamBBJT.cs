@@ -66,6 +66,8 @@ public class StackingTeamBBJT : IStackable
                 foreach (var tile in scanTiles)
                 {  
                     var nextTile = TowerLocation(i, tile,_midpoint);
+                    var distanceRadius = _midpoint - nextTile.Center;
+                    if (distanceRadius.magnitude < distanceRadius.magnitude - (0.5f * _tileSize.x) - (0.5f*_tileSize.z)) break;
                     _placeTiles.Add(nextTile);
                 }
             }
@@ -98,18 +100,20 @@ public class StackingTeamBBJT : IStackable
         bool isEven = layer % 2 == 0;
 
         Vector3 position = new Vector3(0, (layer) * _tileSize.y, (row * 2 - 1) * _tileSize.z);//a.
+
         var rotation = Quaternion.Euler(0, isEven ? 0 : -90, 0); //b.
         var tile = new Orient(rotation * position, rotation); //c.
 
         tile.Center = location.Rotation * tile.Center;
         tile.Rotation = location.Rotation * tile.Rotation;
 
-        Orient tilt = new Orient(0, 0, 0, 8f * layer);
-        tile = tile.Transform(tilt);
+        //Orient tilt = new Orient(0, 0, 0, 8f * layer);
+        //tile = tile.Transform(tilt);
 
         tile.Center += location.Center + location.Rotation * Vector3.forward * _tileSize.z;
 
         var toMiddle = towardsMiddle(midpoint, tile.Center) * layer;
+        
         tile.Center.z += toMiddle.z;
         tile.Center.x += toMiddle.x;
 
@@ -130,18 +134,20 @@ public class StackingTeamBBJT : IStackable
     {
         // the difference between midpoint and position = distance to get to the center
         var vector = midpoint - position;
-        float stepDistance;
+        // float stepDistance;
 
-       // distance = Mathf.Max(vector.magnitude -  0.5f * _tileSize.x -  0.5f * _tileSize.y)
-        if (vector.magnitude < 0.40f)
-        {
-            stepDistance = 0.000f;
-        }
-        else
-        {
-            stepDistance = 0.025f;
-        }
-        var distance = Mathf.Min(vector.magnitude, stepDistance);//
+        //// distance = Mathf.Max(vector.magnitude -  0.5f * _tileSize.x -  0.5f * _tileSize.y)
+        // if (vector.magnitude < 0.40f)
+        // {
+        //     stepDistance = 0.000f;
+        // }
+        // else
+        // {
+        //     stepDistance = 0.025f;
+        // }
+
+        var stepDistance = 0.025f; 
+        var distance = Mathf.Min(vector.magnitude, stepDistance);
         return vector.normalized* distance;
     }
 }
@@ -158,9 +164,9 @@ class TeamBBJTVirtualCamera : ICamera
         {
             //bricks place in the placing area = only scaned once.
             // discribed (x,y,z, rotation in y)
-           new Orient(0.7f, 0.045f, 0.3f, 45),
+           new Orient(0.7f, 0.045f, 0.2f, 45),
            new Orient(0.5f, 0.045f, 0.6f, 20),
-           new Orient(0.8f, 0.045f, 0.6f, 0),
+           new Orient(0.9f, 0.045f, 0.6f, 0),
 
            // brick for placing.
            new Orient(0.1f,0.045f,0.5f,90)
@@ -170,6 +176,24 @@ class TeamBBJTVirtualCamera : ICamera
         {
  
            new[] {t[0],t[1],t[2]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
            new[] {t[3]},
            new[] {t[3]},
            new[] {t[3]},
