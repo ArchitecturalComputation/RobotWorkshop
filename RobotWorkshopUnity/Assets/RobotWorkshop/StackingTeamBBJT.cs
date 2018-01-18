@@ -149,12 +149,19 @@ public class StackingTeamBBJT : IStackable
     Vector3 towardsMiddle(Vector3 midpoint, Vector3 position)
     {
         // the difference between midpoint and position = distance to get to the center
-
         var vector = midpoint - position;
-        var stepDistance = 0.025f;
+        float stepDistance;
+
+       // distance = Mathf.Max(vector.magnitude -  0.5f * _tileSize.x -  0.5f * _tileSize.y)
+        if (vector.magnitude < 0.70f)
+        {
+            stepDistance = 0.000f;
+        }
+        else
+        {
+            stepDistance = 0.025f;
+        }
         var distance = Mathf.Min(vector.magnitude, stepDistance);//
-        
-        //return position + vector.normalized * distance;
         return vector.normalized* distance;
     }
 }
