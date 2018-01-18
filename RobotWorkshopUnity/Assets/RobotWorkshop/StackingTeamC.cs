@@ -21,14 +21,14 @@ public class StackingTeamC : IStackable
 
     bool CheckCamera(IList<Orient> tiles)
     {
-        if (tiles.Count == 0)
-        {
-            Message = "No tiles left.";
-            return false;
-        }
         if (tiles == null)
         {
             Message = "Camera error.";
+            return false;
+        }
+        if (tiles.Count == 0)
+        {
+            Message = "No tiles left.";
             return false;
         }
         return true;
@@ -80,7 +80,8 @@ public class StackingTeamC : IStackable
         var radius = Vector3.Distance(orient.Center, center); //radius point oriented - center of orient 
         var tileNumberf = (2 * Mathf.PI * radius) / (0.18f * 1.2f); //Number of Tile
              int tileNumber = (int)Mathf.Floor(tileNumberf);
-        for (int i = 0; i < tileNumber; i++)
+
+        for (int i = 1; i < tileNumber; i++)
         {
             var angle = 360 / (float)tileNumber;
             var newTile = orient.RotateAround(center, i*angle); //newTile is the birck's center of new one
@@ -101,10 +102,10 @@ class TeamCVirtualCamera : ICamera
            new Orient(0.8f, 0.045f*2,   0.6f,   30.0f),
            new Orient(0.1f, 0.045f,  0.5f, 90), 
         };
-        _sequence = new Queue<Orient[]>(new[]   //total number of total Tiles?   //only 6bricks implemented
+        _sequence = new Queue<Orient[]>(new[]
         {
-           new[] {t[0],t[1]},
-           new[] {t[0]}, //this is applied to the first row
+           new[] {t[0]},
+           new[] {t[1]}, 
            new[] {t[2]},
            new[] {t[2]},
            new[] {t[2]},
@@ -115,9 +116,10 @@ class TeamCVirtualCamera : ICamera
            new[] {t[2]},
            new Orient[0]
         });
-       
         
-    
+
+
+        //Number of tiles. number of implementation.  
     }
     public IList<Orient> GetTiles(Rect area)
     {
