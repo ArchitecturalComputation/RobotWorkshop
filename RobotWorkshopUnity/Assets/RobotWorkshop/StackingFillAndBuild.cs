@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Threading;
 
 public class StackingFillAndBuild : IStackable
 {
@@ -30,8 +31,8 @@ public class StackingFillAndBuild : IStackable
     {
 
         float m = 0.02f;
-        _pick_area = new Rect(0 + m, 0 + m, 0.4f - m, 0.8f - m);
-        _place_area = new Rect(0.4f + m, 0 + m, 1.0f - m, 0.8f - m);
+        _pick_area = new Rect(0 + m, 0 + m, 0.3f - m, 0.8f - m);
+        _place_area = new Rect(0.3f + m, 0 + m, 1.1f - m, 0.8f - m);
         _camera = mode == Mode.Virtual ? new TeamAVirtualCamera() as ICamera : new LiveCamera() as ICamera;
     }
 
@@ -55,15 +56,16 @@ public class StackingFillAndBuild : IStackable
 
     public PickAndPlaceData GetNextTargets()
     {
-        IList<Orient> pick_top = _camera.GetTiles(_pick_area);
+        // Thread.Sleep(500);
         IList<Orient> place_top = _camera.GetTiles(_place_area);
+        // Thread.Sleep(500);
+        IList<Orient> pick_top = _camera.GetTiles(_pick_area);
 
         if (!CheckCamera("top", pick_top)) return null;
         if (!CheckCamera("place", place_top)) return null;
 
         Debug.Log($"{pick_top.Count} pick blocks, {place_top.Count} placed blocks detected");
         _pick_blocks = pick_top;
-
 
         // Debug.Log(string.Format("_placed_blocks.Count = {0}", _placed_blocks.Count));
         Orient pick = pick_top.Last();
@@ -316,10 +318,10 @@ public class StackingFillAndBuild : IStackable
     {
         int table_x = 1400;         // length of table in mm
         int table_z = 800;          // width of table in mm
-        int padding_x_min = 400;    // extra padding to avoid pile of blocks
-        int padding_x_max = 100;    // padding     
-        int padding_z_min = 100;    // padding
-        int padding_z_max = 100;    // padding
+        int padding_x_min = 450;    // extra padding to avoid pile of blocks
+        int padding_x_max = 150;    // padding     
+        int padding_z_min = 150;    // padding
+        int padding_z_max = 150;    // padding
         float block_dist_min;       // minimum distance between each point on table to nearest block
         float largest_dist = 0;     // largest min distance out of all points on table
         float new_block_x = 0;      // x coordinate of new block
