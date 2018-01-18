@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -6,11 +7,21 @@ using static UnityEngine.Mathf;
 
 public interface IStackable
 {
-    Orient[] GetNextTargets();
-    string Message { get; set; }
+    PickAndPlaceData GetNextTargets();
+    string Message { get; }
+    IEnumerable<Orient> Display { get; }
+}
+
+public class PickAndPlaceData
+{
+    public Orient Pick { get; set; }
+    public Orient Place { get; set; }
+    public bool Retract { get; set; } = false;
+    public bool StopLoop { get; set; } = false;
 }
 
 public enum Mode { Virtual, Live };
+public enum Team { Debug, TeamA, TeamBBJT, TeamC };
 
 public class Robot : MonoBehaviour
 {
@@ -25,21 +36,29 @@ public class Robot : MonoBehaviour
     IStackable _stackable;
 
     Material _selectedMaterial;
-    Orient[] _targets;
+    PickAndPlaceData _currentData;
     bool _looping = false;
     bool _robotAwaiting = false;
     Mode _mode;
+    Team _team;
     string _robotMessage = "Press connect.";
-    bool _retract = false;
 
     void Initialize()
     {
-        _selectedMaterial = new Material(_material);
-        _selectedMaterial.color = Color.red;
+        _selectedMaterial = new Material(_material)
+        {
+            color = Color.red
+        };
 
-        //  _retract = true;
-        // _stackable = new StackingFillAndBuild(_mode); // Team A
-        _stackable = new StackingTeamC(_mode); // Team BBJT
+        switch (_team)
+        {
+            case Team.Debug: { _stackable = new StackingVisionSimple(_mode); break; }
+            case Team.TeamA: { _stackable = new StackingFillAndBuild(_mode); break; }
+            case Team.TeamBBJT: { _stackable = new StackingTeamBBJT(_mode); break; }
+            case Team.TeamC: { _stackable = new StackingTeamC(_mode); break; }
+            default:
+                throw new ArgumentOutOfRangeException("Team not found.");
+        }
     }
 
     async void StartLoop()
@@ -62,15 +81,15 @@ public class Robot : MonoBehaviour
             {
                 if (_stackable == null) Initialize();
 
-                _targets = _stackable.GetNextTargets();
+                _currentData = _stackable.GetNextTargets();
 
-                if (_targets == null)
+                if (_currentData == null || _currentData.StopLoop)
                 {
                     StopLoop();
                     return;
                 }
 
-                _server.SendTargets(_retract ? 2 : 1, BestGrip(_targets[0]), BestGrip(_targets[1]));
+                _server.SendTargets(_currentData.Retract ? 2 : 1, BestGrip(_currentData.Pick), BestGrip(_currentData.Place));
                 _robotAwaiting = false;
             }
         }
@@ -117,31 +136,35 @@ public class Robot : MonoBehaviour
             _server.Dispose();
     }
 
-    private void Update()
+    void Update()
     {
-        if (_targets == null) return;
-
-        for (int i = 0; i < _targets.Length; i++)
+        if (_stackable?.Display != null)
         {
-            var target = _targets[i];
-            var material = i < 2 ? _selectedMaterial : _material;
-            Graphics.DrawMesh(_tile, target.Center, target.Rotation, material, 0);
+            foreach (var orient in _stackable.Display)
+                DrawTile(orient, _material);
+        }
+
+        if (_currentData != null)
+        {
+            DrawTile(_currentData.Pick, _selectedMaterial);
+            DrawTile(_currentData.Place, _selectedMaterial);
         }
     }
 
-    private void OnGUI()
+    void DrawTile(Orient orient, Material material)
+    {
+        Graphics.DrawMesh(_tile, orient.Center, orient.Rotation, material, 0);
+    }
+
+    void OnGUI()
     {
         GUI.skin = _skin;
 
-        GUILayout.BeginArea(new Rect(16, 16, Screen.width - 16, 400));
+        GUILayout.BeginArea(new Rect(16, 16, Screen.width, Screen.height));
         GUILayout.BeginVertical();
-        GUILayout.BeginHorizontal();
 
+        _team = (Team)GUILayout.SelectionGrid((int)_team, new[] { "Debug", "Team A", "Team BBJT", "Team C" }, 4);
         _mode = (Mode)GUILayout.SelectionGrid((int)_mode, new[] { "Virtual", "Live" }, 2);
-
-        GUILayout.EndHorizontal();
-
-        GUILayout.BeginHorizontal();
 
         if (_server == null)
         {
@@ -162,7 +185,6 @@ public class Robot : MonoBehaviour
             }
         }
 
-        GUILayout.EndHorizontal();
         GUILayout.Label($"<b>Robot:</b> {_robotMessage}");
         GUILayout.Label($"<b>Stacking:</b> {_stackable?.Message}");
         GUILayout.EndVertical();

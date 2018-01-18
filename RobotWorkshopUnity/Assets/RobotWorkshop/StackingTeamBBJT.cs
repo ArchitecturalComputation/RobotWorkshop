@@ -1,10 +1,11 @@
-using System.Linq;
+﻿using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class StackingTeamBBJT : IStackable
 {
-    public string Message { get; set; }
+    public string Message { get; private set; }
+    public IEnumerable<Orient> Display { get { return _placeTiles; } }
 
     readonly Vector3 _pickPoint = new Vector3(0.2f, 0, 0.4f);
     readonly Vector3 _placePoint = new Vector3(1.2f, 0, 0.4f);
@@ -13,7 +14,6 @@ public class StackingTeamBBJT : IStackable
     readonly Rect _rect;
     readonly ICamera _camera;
     
-    // _placeTiles =  all the values/Vectors where the tiles will be place according to the script
     List<Orient> _placeTiles = new List<Orient>();
     // tileCount = INDEX;
     int _tileCount = 0;
@@ -38,42 +38,34 @@ public class StackingTeamBBJT : IStackable
         }
         // there is no tiles in the camera scan
         if (tiles.Count == 0)
-        {
-            Message = "No tiles left.";
-            return false;
-        }
+
         return true;
     }
 
     IList<Orient> _firstScan;
 
-    public Orient[] GetNextTargets()
+    public PickAndPlaceData GetNextTargets()
     {
         float m = 0.02f;
-        // if the the list that should have the Orient values to place the tiles is empty (.count==0)
         if (_placeTiles.Count == 0)
         {
             // defining the placing area
             //0.75 is the are used for placing the tiles
             var scanRect = new Rect(1.4f * 0.25f + m, 0 + m, 1.4f * 0.75f - m * 2, 0.8f - m * 2);
-            var scanTiles = _camera.GetTiles(scanRect); // get values fro the camere
-            if (!CheckCamera(scanTiles)) return null; // everything is fine with the camera
+            var scanTiles = _camera.GetTiles(scanRect);
+            if (!CheckCamera(scanTiles)) return null; 
 
-            var _midpoint = midpoint(scanTiles);
+           var _midpoint =  Midpoint(scanTiles);
 
-            // for all the 15 tiles in each tower
             for (int i = 1; i < 15; i++)
             { 
-                // consider the ones (tile) the camera scanned int the placing area (scanTiles)
                 foreach (var tile in scanTiles)
-                {
-                    // build the 'nextTile' in relation to the previous (tile)          
+                {  
                     var nextTile = TowerLocation(i, tile,_midpoint);
-                    // add the Orients for the 'next Tiles' in the _placeTiles List
                     _placeTiles.Add(nextTile);
                 }
             }
-            _firstScan = scanTiles; //remove later; (why?)
+            _firstScan = scanTiles; //remove later; (why?) ¯\_(ツ)_/¯
         }
 
         if (_tileCount >= _placeTiles.Count)
@@ -81,24 +73,19 @@ public class StackingTeamBBJT : IStackable
             Message = "Finished building towers.";
             return null;
         }
-        // the 0.25 is the are used to pick the tiles
         var pickRect = new Rect(0 + m, 0 + m, 1.4f * 0.25f - m * 2, 0.8f - m * 2);
         var pickTiles = _camera.GetTiles(pickRect);
         if (!CheckCamera(pickTiles)) return null;
 
-        // picking and placing 
-        var pick = pickTiles.First(); // take the first one (check pickTiles method)
-        var place = _placeTiles[_tileCount]; //the orient to place 'place' = placetiles [index]
-        _tileCount++; //increment the count (move to the next index) and start again
+        var pick = pickTiles.First(); 
+        var place = _placeTiles[_tileCount]; 
+        _tileCount++; 
 
         // message while constructing
         Message = $"Placing tile {_tileCount} out of {_placeTiles.Count}";
-        return new[] { pick, place } // 
-        .Concat(_placeTiles).ToArray(); // just to display all the values
+        return new PickAndPlaceData { Pick = pick, Place = place };
     }
 
-    // the logic to build the towers
-    // to create, we use index: and location:
     Orient TowerLocation(int index, Orient location, Vector3 midpoint)
     {
         int count = index;
@@ -106,37 +93,26 @@ public class StackingTeamBBJT : IStackable
         int row = count % 2;
         bool isEven = layer % 2 == 0;
 
-        // this logic creates the tower tile per tile
-        //1. create the tower logic in the origin (estabilishes the relationship between tiles)
-        //a. position: moves in Z> row 0> / row 
-        //b. rotating 90deg for even layers
-        //c. 'create' tile : rotate the position so the center moves / and then rotates the tile
         Vector3 position = new Vector3(0, (layer) * _tileSize.y, (row * 2 - 1) * _tileSize.z);//a.
         var rotation = Quaternion.Euler(0, isEven ? 0 : -90, 0); //b.
-        var tile = new Orient(rotation*position, rotation); //c.
-       
-        //2. relocate the tile to its ACTUAL location
-        tile.Center = location.Rotation * tile.Center; // translate the center to the place
-        tile.Rotation = location.Rotation * tile.Rotation; // rotate the tiles (same as before c.)
+        var tile = new Orient(rotation * position, rotation); //c.
 
+        tile.Center = location.Rotation * tile.Center;
+        tile.Rotation = location.Rotation * tile.Rotation;
 
         Orient tilt = new Orient(0, 0, 0, 8f * layer);
         tile = tile.Transform(tilt);
 
-        // translating the whole tower
         tile.Center += location.Center + location.Rotation * Vector3.forward * _tileSize.z;
 
-        // going towards the midle:
         var toMiddle = towardsMiddle(midpoint, tile.Center) * layer;
         tile.Center.z += toMiddle.z;
         tile.Center.x += toMiddle.x;
 
-     
         return tile;
-
     }
 
-    Vector3 midpoint(IList<Orient> startTiles)
+    Vector3 Midpoint(IList<Orient> startTiles)
     {
         Vector3 sum = Vector3.zero;
         foreach (var tile in startTiles)
@@ -174,7 +150,6 @@ class TeamBBJTVirtualCamera : ICamera
 
     public TeamBBJTVirtualCamera()
     {
-        // array to simulate what the camera is seeing.
         var t = new[]
         {
             //bricks place in the placing area = only scaned once.
@@ -188,8 +163,7 @@ class TeamBBJTVirtualCamera : ICamera
 
         _sequence = new Queue<Orient[]>(new[]
         {
-            // WHERE TO Check camera (temporary)
-            // 1 = placing area 2+= only picking area
+ 
            new[] {t[0],t[1],t[2]},
            new[] {t[3]},
            new[] {t[3]},

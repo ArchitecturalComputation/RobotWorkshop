@@ -33,3 +33,4 @@ sysinfo.txt
 # Builds
 *.apk
 *.unitypackage
+/RobotWorkshopUnity/Assets/RobotWorkshop/StackingTeamC.cs.meta
