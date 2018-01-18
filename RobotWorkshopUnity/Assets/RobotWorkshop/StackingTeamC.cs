@@ -5,9 +5,7 @@ using System;
 public class StackingTeamC : IStackable
 {
     public string Message { get; set; }
-    public IEnumerable<Orient> Display { get { return _placeTiles; } }
-
-    
+    public IEnumerable<Orient> Display { get { return _placeTiles; } }   
     readonly float _gap = 0.005f;
     readonly Vector3 _pickPoint = new Vector3(0.2f, 0, 0.4f);
     readonly Vector3 _placePoint = new Vector3(1.2f, 0, 0.4f);
@@ -44,14 +42,20 @@ public class StackingTeamC : IStackable
             // definig place area and scaning
             var scanRect = new Rect(1.4f * 0.25f + m, 0 + m, 1.4f * 0.75f - m * 2, 0.8f - m * 2);
             var scanTiles = _camera.GetTiles(scanRect);
+            //layer 1
             var _center = new Vector3(0.7f, 0.045f, 0.4f);
+            //layer 2
+            var _center2 = new Vector3(0.7f, 0.045f*2, 0.4f);
+            //layer 3
+            var _center3 = new Vector3(0.7f, 0.045f*3, 0.4f);
             if (!CheckCamera(scanTiles)) return null;
+            
             if (scanTiles.Count > 1)
             {
                 Message = "Place a single tile on the next row and press 'start loop'.";
                 return null;
             }
-            _placeTiles = CreateRow(scanTiles.First(), _center);
+            _placeTiles = CreateRow(scanTiles.First(), _center3);
         }
 
         // definig pick area and scaning
@@ -92,28 +96,35 @@ public class StackingTeamC : IStackable
 class TeamCVirtualCamera : ICamera
 {
     Queue<Orient[]> _sequence;
+    
     public TeamCVirtualCamera()
     {
         var t = new[]
         {
-           new Orient(0.98f,0.045f,0.4f,90f),
-           new Orient(0.2f,0.045f*2,0.1f,30.0f),
-           new Orient(0.1f,0.045f,0.5f,90),           
-           new Orient(0.1f,0.09f,0.5f,90),
+            //layer 1
+           //new Orient(0.98f,0.045f,0.4f,90f),
+           //layer 2
+            // new Orient(0.96f,0.045f*2,0.4f,90f),
+             //layer 3
+             new Orient(0.94f,0.045f*3,0.4f,90f),
+          new Orient(0.2f,0.045f*2,0.1f,30.0f),
+        
         };
         _sequence = new Queue<Orient[]>(new[]
         {
            new[] {t[0]},
-           new[] {t[2]},
-           new[] {t[2]},
-           new[] {t[2]},
-           new[] {t[2]},
-           new[] {t[3]},
-           new[] {t[2]},
-           new[] {t[2]},
-           new[] {t[3]},
+           new[] {t[1]},
+           new[] {t[1]},
+           new[] {t[1]},
+           new[] {t[1]},
+           new[] {t[1]},
+           new[] {t[1]},
+           new[] {t[1]},
+           new[] {t[1]},
            new Orient[0]
         });
+  
+
     }
     public IList<Orient> GetTiles(Rect area)
     {
