@@ -105,11 +105,14 @@ public class StackingTeamBBJT : IStackable
 
     List<Orient> ConstructTowersB(IList<Orient> scanTiles)
     {
-        var towers = new List<Orient>();
 
+        // safety radius
+        // radius from the tile that is the magnitude related to size
+        var towers = new List<Orient>();
         var mid = Midpoint(scanTiles);
         float maxStep = 0.02f;
-        var radius = new Vector2(_tileSize.x, _tileSize.x).magnitude * 0.5f;
+        float grip = 0.015f;
+        var radius = new Vector2(_tileSize.x + grip, _tileSize.x + grip).magnitude * 0.5f;
 
         var vectors = scanTiles
             .Select(t => mid - t.Center);
@@ -121,8 +124,6 @@ public class StackingTeamBBJT : IStackable
 
         var maxDistance = distances.Max();
         int layers = Mathf.CeilToInt(maxDistance / maxStep);
-
-        Debug.Log($"Layers: {layers}");
 
         var stepDistances = distances.Select(d => d / layers).ToList();
 
@@ -195,9 +196,10 @@ class TeamBBJTVirtualCamera : ICamera
         {
             //bricks place in the placing area = only scaned once.
             // discribed (x,y,z, rotation in y)
-           new Orient(0.7f, 0.045f, 0.2f, 45),
-           new Orient(0.5f, 0.045f, 0.6f, 20),
+           new Orient(0.5f, 0.045f, 0.2f, 45),
+           new Orient(0.3f, 0.045f, 0.6f, 20),
            new Orient(0.9f, 0.045f, 0.6f, 0),
+           new Orient(0.9f, 0.045f, 0.2f, 0),
 
            // brick for placing.
            new Orient(0.1f,0.045f,0.5f,90)
@@ -206,37 +208,20 @@ class TeamBBJTVirtualCamera : ICamera
         _sequence = new Queue<Orient[]>(new[]
         {
 
-           new[] {t[0],t[1],t[2]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
-           new[] {t[3]},
+           new[] {t[0],t[1],t[2],t[3]},
+           new[] {t[4]},
+           new[] {t[4]},
+           new[] {t[4]},
+           new[] {t[4]},
+           new[] {t[4]},
+           new[] {t[4]},
+           new[] {t[4]},
+           new[] {t[4]},
+           new[] {t[4]},
+           new[] {t[4]},
+           new[] {t[4]},
+           new[] {t[4]},
+
            new Orient[0]
         });
     }
