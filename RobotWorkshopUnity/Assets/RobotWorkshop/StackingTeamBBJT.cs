@@ -1,11 +1,12 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class StackingTeamBBJT : IStackable
 {
     public string Message { get; private set; }
-    public IEnumerable<Orient> Display { get { return _placeTiles; } }
+    public IEnumerable<Orient> Display { get { return _startTiles.Concat(_placeTiles); } }
 
     readonly Vector3 _pickPoint = new Vector3(0.2f, 0, 0.4f);
     readonly Vector3 _placePoint = new Vector3(1.2f, 0, 0.4f);
@@ -13,7 +14,7 @@ public class StackingTeamBBJT : IStackable
     readonly float _gap = 0.005f;
     readonly Rect _rect;
     readonly ICamera _camera;
-    
+
     List<Orient> _placeTiles = new List<Orient>();
     // tileCount = INDEX;
     int _tileCount = 0;
@@ -29,7 +30,7 @@ public class StackingTeamBBJT : IStackable
     // the checked data are: 1. tiles.Count
 
     bool CheckCamera(IList<Orient> tiles)
-    {   
+    {
         // the camera dont see anything.
         if (tiles == null)
         {
@@ -46,7 +47,7 @@ public class StackingTeamBBJT : IStackable
         return true;
     }
 
-    IList<Orient> _firstScan;
+    IList<Orient> _startTiles;
 
     public PickAndPlaceData GetNextTargets()
     {
@@ -57,19 +58,12 @@ public class StackingTeamBBJT : IStackable
             //0.75 is the are used for placing the tiles
             var scanRect = new Rect(1.4f * 0.25f + m, 0 + m, 1.4f * 0.75f - m * 2, 0.8f - m * 2);
             var scanTiles = _camera.GetTiles(scanRect);
-            if (!CheckCamera(scanTiles)) return null; 
+            _startTiles = scanTiles;
+            if (!CheckCamera(scanTiles)) return null;
 
-           var _midpoint =  Midpoint(scanTiles);
+            //_placeTiles = ConstructTowersA(scanTiles);
+            _placeTiles = ConstructTowersB(scanTiles);
 
-            for (int i = 1; i < 15; i++)
-            { 
-                foreach (var tile in scanTiles)
-                {  
-                    var nextTile = TowerLocation(i, tile,_midpoint);
-                    _placeTiles.Add(nextTile);
-                }
-            }
-            _firstScan = scanTiles; //remove later; (why?) ¯\_(ツ)_/¯
         }
 
         if (_tileCount >= _placeTiles.Count)
@@ -81,16 +75,80 @@ public class StackingTeamBBJT : IStackable
         var pickTiles = _camera.GetTiles(pickRect);
         if (!CheckCamera(pickTiles)) return null;
 
-        var pick = pickTiles.First(); 
-        var place = _placeTiles[_tileCount]; 
-        _tileCount++; 
+        var pick = pickTiles.First();
+        var place = _placeTiles[_tileCount];
+        _tileCount++;
 
         // message while constructing
         Message = $"Placing tile {_tileCount} out of {_placeTiles.Count}";
         return new PickAndPlaceData { Pick = pick, Place = place };
     }
 
+    List<Orient> ConstructTowersA(IList<Orient> scanTiles)
+    {
+        var towers = new List<Orient>();
+        var _midpoint = Midpoint(scanTiles);
+
+        for (int i = 1; i < 15; i++)
+        {
+            foreach (var tile in scanTiles)
+            {
+                var nextTile = TowerLocation(i, tile, _midpoint);
+                var distanceRadius = _midpoint - nextTile.Center;
+                if (distanceRadius.magnitude < distanceRadius.magnitude - (0.5f * _tileSize.x) - (0.5f * _tileSize.z)) break;
+                towers.Add(nextTile);
+            }
+        }
+
+        return towers;
+    }
+
+    List<Orient> ConstructTowersB(IList<Orient> scanTiles)
+    {
+        var towers = new List<Orient>();
+
+        var mid = Midpoint(scanTiles);
+        float maxStep = 0.02f;
+        var radius = new Vector2(_tileSize.x, _tileSize.x).magnitude * 0.5f;
+
+        var vectors = scanTiles
+            .Select(t => mid - t.Center);
+
+        var distances = vectors
+            .Select(v => Mathf.Max(v.magnitude - radius * 1, 0));
+
+        var unitVectors = vectors.Select(v => v.normalized).ToList();
+
+        var maxDistance = distances.Max();
+        int layers = Mathf.CeilToInt(maxDistance / maxStep);
+
+        Debug.Log($"Layers: {layers}");
+
+        var stepDistances = distances.Select(d => d / layers).ToList();
+
+        for (int j = 0; j < layers; j++)
+        {
+            for (int i = 0; i < scanTiles.Count; i++)
+            {
+                var stepDistance = stepDistances[i];
+                var vector = unitVectors[i] * (stepDistance * j);
+                var pos = scanTiles[i].Center + vector;
+                var rot = scanTiles[i].Rotation;
+                var location = new Orient(pos, rot);
+                if (j > 0) towers.Add(TowerLocation(j * 2, location));
+                towers.Add(TowerLocation(j * 2 + 1, location));
+            }
+        }
+
+        return towers;
+    }
+
     Orient TowerLocation(int index, Orient location, Vector3 midpoint)
+    {
+        throw new NotImplementedException("Change this method.");
+    }
+
+    Orient TowerLocation(int index, Orient location)
     {
         int count = index;
         int layer = count / 2;
@@ -98,20 +156,22 @@ public class StackingTeamBBJT : IStackable
         bool isEven = layer % 2 == 0;
 
         Vector3 position = new Vector3(0, (layer) * _tileSize.y, (row * 2 - 1) * _tileSize.z);//a.
+
         var rotation = Quaternion.Euler(0, isEven ? 0 : -90, 0); //b.
         var tile = new Orient(rotation * position, rotation); //c.
 
         tile.Center = location.Rotation * tile.Center;
         tile.Rotation = location.Rotation * tile.Rotation;
 
-        Orient tilt = new Orient(0, 0, 0, 8f * layer);
-        tile = tile.Transform(tilt);
+        //Orient tilt = new Orient(0, 0, 0, 8f * layer);
+        //tile = tile.Transform(tilt);
 
         tile.Center += location.Center + location.Rotation * Vector3.forward * _tileSize.z;
 
-        var toMiddle = towardsMiddle(midpoint, tile.Center) * layer;
-        tile.Center.z += toMiddle.z;
-        tile.Center.x += toMiddle.x;
+        // var toMiddle = towardsMiddle(midpoint, tile.Center) * layer;
+
+        //  tile.Center.z += toMiddle.z;
+        //  tile.Center.x += toMiddle.x;
 
         return tile;
     }
@@ -130,19 +190,21 @@ public class StackingTeamBBJT : IStackable
     {
         // the difference between midpoint and position = distance to get to the center
         var vector = midpoint - position;
-        float stepDistance;
+        // float stepDistance;
 
-       // distance = Mathf.Max(vector.magnitude -  0.5f * _tileSize.x -  0.5f * _tileSize.y)
-        if (vector.magnitude < 0.40f)
-        {
-            stepDistance = 0.000f;
-        }
-        else
-        {
-            stepDistance = 0.025f;
-        }
-        var distance = Mathf.Min(vector.magnitude, stepDistance);//
-        return vector.normalized* distance;
+        //// distance = Mathf.Max(vector.magnitude -  0.5f * _tileSize.x -  0.5f * _tileSize.y)
+        // if (vector.magnitude < 0.40f)
+        // {
+        //     stepDistance = 0.000f;
+        // }
+        // else
+        // {
+        //     stepDistance = 0.025f;
+        // }
+
+        var stepDistance = 0.025f;
+        var distance = Mathf.Min(vector.magnitude, stepDistance);
+        return vector.normalized * distance;
     }
 }
 
@@ -158,9 +220,9 @@ class TeamBBJTVirtualCamera : ICamera
         {
             //bricks place in the placing area = only scaned once.
             // discribed (x,y,z, rotation in y)
-           new Orient(0.7f, 0.045f, 0.3f, 45),
+           new Orient(0.7f, 0.045f, 0.2f, 45),
            new Orient(0.5f, 0.045f, 0.6f, 20),
-           new Orient(0.8f, 0.045f, 0.6f, 0),
+           new Orient(0.9f, 0.045f, 0.6f, 0),
 
            // brick for placing.
            new Orient(0.1f,0.045f,0.5f,90)
@@ -168,8 +230,26 @@ class TeamBBJTVirtualCamera : ICamera
 
         _sequence = new Queue<Orient[]>(new[]
         {
- 
+
            new[] {t[0],t[1],t[2]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
+           new[] {t[3]},
            new[] {t[3]},
            new[] {t[3]},
            new[] {t[3]},
