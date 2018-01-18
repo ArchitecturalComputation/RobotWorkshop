@@ -44,7 +44,7 @@ public class StackingTeamC : IStackable
             // definig place area and scaning
             var scanRect = new Rect(1.4f * 0.25f + m, 0 + m, 1.4f * 0.75f - m * 2, 0.8f - m * 2);
             var scanTiles = _camera.GetTiles(scanRect);
-            var _center = new Vector3(0.7f,0f,0.4f);
+            var _center = new Vector3(0.7f, 0.045f, 0.4f);
             if (!CheckCamera(scanTiles)) return null;
             if (scanTiles.Count > 1)
             {
@@ -96,7 +96,7 @@ class TeamCVirtualCamera : ICamera
     {
         var t = new[]
         {
-           new Orient(0.8f,0.045f,0.6f,30f),
+           new Orient(0.98f,0.045f,0.4f,90f),
            new Orient(0.2f,0.045f*2,0.1f,30.0f),
            new Orient(0.1f,0.045f,0.5f,90),           
            new Orient(0.1f,0.09f,0.5f,90),
