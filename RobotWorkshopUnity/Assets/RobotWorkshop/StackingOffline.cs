@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class StackingOffline : IStackable
 {
-    public string Message { get; set; }
+    public string Message { get; private set; }
+    public IEnumerable<Orient> Display { get; }
 
     readonly Vector3 _pickPoint = new Vector3(0.2f, 0, 0.4f);
     readonly Vector3 _placePoint = new Vector3(1.2f, 0, 0.4f);
@@ -20,7 +21,7 @@ public class StackingOffline : IStackable
         MakePickTower();
     }
 
-    public Orient[] GetNextTargets()
+    public PickAndPlaceData GetNextTargets()
     {
         if (_pickTiles.Count == 0)
         {
@@ -38,7 +39,7 @@ public class StackingOffline : IStackable
 
         Message = $"Placing tile {_placeTiles.Count} out of {_tileCount}";
 
-        return new[] { pick, place };
+        return new PickAndPlaceData { Pick = pick, Place = place };
     }
 
 

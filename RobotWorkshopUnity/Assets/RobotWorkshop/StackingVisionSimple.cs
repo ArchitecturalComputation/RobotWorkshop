@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class StackingVisionSimple : IStackable
 {
-    public string Message { get; set; }
+    public string Message { get; private set; }
+    public IEnumerable<Orient> Display { get { return _placedTiles; } }
 
     readonly Rect _rect;
     readonly ICamera _camera;
@@ -19,7 +20,7 @@ public class StackingVisionSimple : IStackable
         _camera = mode == Mode.Virtual ? new VirtualCamera() as ICamera : new LiveCamera() as ICamera;
     }
 
-    public Orient[] GetNextTargets()
+    public PickAndPlaceData GetNextTargets()
     {
         var topLayer = _camera.GetTiles(_rect);
 
@@ -38,11 +39,8 @@ public class StackingVisionSimple : IStackable
         var pick = topLayer.First();
         var place = pick;
         place.Center.x += 0.700f;
-
-        var tiles = new[] { pick, place }
-        .Concat(_placedTiles).ToArray();
-
         _placedTiles.Add(place);
-        return tiles;
+
+        return new PickAndPlaceData { Pick = pick, Place = place };
     }
 }
