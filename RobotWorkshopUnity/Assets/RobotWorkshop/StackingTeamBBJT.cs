@@ -128,21 +128,23 @@ public class StackingTeamBBJT : IStackable
 
     Vector3 towardsMiddle(Vector3 midpoint, Vector3 position)
     {
-        // the difference between midpoint and position = distance to get to the center
+        //// the difference between midpoint and position = distance to get to the center
+        //var position = tile + (row * 2 - 1) * _tileSize.z);
         var vector = midpoint - position;
-        float stepDistance;
+        float stepDistance = 0.025f;
 
-       // distance = Mathf.Max(vector.magnitude -  0.5f * _tileSize.x -  0.5f * _tileSize.y)
-        if (vector.magnitude < 0.40f)
+        Debug.Log("vector magnitude: " + vector.magnitude);
+
+        if (vector.magnitude <= vector.magnitude - (0.5f * _tileSize.x) - (0.5f * _tileSize.z))
         {
-            stepDistance = 0.000f;
+          stepDistance = 0.000f;
         }
         else
         {
             stepDistance = 0.025f;
         }
-        var distance = Mathf.Min(vector.magnitude, stepDistance);//
-        return vector.normalized* distance;
+        var distance = Mathf.Min(vector.magnitude - (0.5f * _tileSize.x) - (0.5f * _tileSize.z), stepDistance);//
+        return vector.normalized* stepDistance;
     }
 }
 
@@ -182,6 +184,7 @@ class TeamBBJTVirtualCamera : ICamera
            new[] {t[3]},
            new[] {t[3]},
            new[] {t[3]},
+
            new Orient[0]
         });
     }
