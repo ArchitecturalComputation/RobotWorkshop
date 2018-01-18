@@ -5,10 +5,11 @@ using System;
 public class StackingTeamC : IStackable
 {
     public string Message { get; set; }
+    
+    readonly float _gap = 0.005f;
     readonly Vector3 _pickPoint = new Vector3(0.2f, 0, 0.4f);
     readonly Vector3 _placePoint = new Vector3(1.2f, 0, 0.4f);
     readonly Vector3 _tileSize = new Vector3(0.18f, 0.045f, 0.06f);
-    readonly float _gap = 0.005f;
     readonly ICamera _camera;
     List<Orient> _placeTiles = new List<Orient>();
     public StackingTeamC(Mode mode)
@@ -35,6 +36,7 @@ public class StackingTeamC : IStackable
 
         if (_placeTiles.Count == 0)
         {
+            // definig place area and scaning
             var scanRect = new Rect(1.4f * 0.25f + m, 0 + m, 1.4f * 0.75f - m * 2, 0.8f - m * 2);
             var scanTiles = _camera.GetTiles(scanRect);
             var _center = new Vector3(0.7f,0f,0.4f);
@@ -46,6 +48,8 @@ public class StackingTeamC : IStackable
             }
             _placeTiles = CreateRow(scanTiles.First(), _center);
         }
+
+        // definig pick area and scaning
         var pickRect = new Rect(0 + m, 0 + m, 1.4f * 0.25f - m * 2, 0.8f - m * 2);
         var pickTiles = _camera.GetTiles(pickRect);
         if (!CheckCamera(pickTiles)) return null;
@@ -57,11 +61,18 @@ public class StackingTeamC : IStackable
         .Concat(_placeTiles).ToArray();
     }
     List<Orient> CreateRow(Orient orient, Vector3 center)
-    {
+    {   //float m = 0.02f;
+        //scan Rect = (1.4f * 0.25f + m ,   0 + m,    1.4f * 0.75f - m * 2,   0.8f - m * 2);
+        // pickRect = (0 + m            ,   0 + m,    1.4f * 0.25f - m * 2,   0.8f - m * 2); =vector(1.4 , 0, 0.8)
+        // _pickPoint =(0.2f, 0, 0.4f);
+        //_placePoint = new Vector3(1.2f, 0, 0.4f);
+        // _tileSize = new Vector3(0.18f, 0.045f, 0.06f);
+        //_center = new Vector3(0.7f,0f,0.4f);
+
         var allBlocks = new List<Orient>();
-           var radius = Vector3.Distance(orient.Center, center);
-        var tileNumberf = (2 * Mathf.PI * radius) / (0.18f * 1.2f);
-        int tileNumber = (int)Mathf.Floor(tileNumberf);
+        var radius = Vector3.Distance(orient.Center, center); //radius point oriented - center of orient 
+        var tileNumberf = (2 * Mathf.PI * radius) / (0.18f * 1.2f); //Number of Tile
+             int tileNumber = (int)Mathf.Floor(tileNumberf);
         for (int i = 0; i < tileNumber; i++)
         {
             var angle = 360 / (float)tileNumber;
