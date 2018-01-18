@@ -8,8 +8,7 @@ public class StackingFillAndBuild : IStackable
     public IEnumerable<Orient> Display { get{ return _display_blocks; } }
 
     int _bottom_layer_blocks = 13;
-    int _max_total_blocks = 20;
-    int _current_block_layer = 1;
+    int _max_total_blocks = 21;
 
     IList<Orient> _pick_blocks = new List<Orient>();
     IList<Orient> _placed_blocks = new List<Orient>();
@@ -18,10 +17,14 @@ public class StackingFillAndBuild : IStackable
     readonly Rect _pick_area;
     readonly Rect _place_area;
     readonly ICamera _camera;
+    readonly Vector3 _tileSize = new Vector3(0.18f, 0.045f, 0.06f);
     bool _instantiate_block = false;
     bool _camera_used = false;
-    Block[] block_arr;
+    Block[] _block_arr;
     List<int[]> _block_pairs = new List<int[]>();
+    List<Orient> _arch_layer = new List<Orient>();
+    static int _current_block_layer = 1;
+    static int _arch_block_num = 0; 
 
     public StackingFillAndBuild(Mode mode)
     {
@@ -105,8 +108,10 @@ public class StackingFillAndBuild : IStackable
         float[] vector_angle;
         float[,] angle_diff;
         public Vector3 Center;
+        public Orient Ori;
         public Block(int this_index, Orient ori, int block_count)
         {
+            Ori = ori;
             Center = ori.Center;
             index = this_index;
             x = ori.Center.x;
@@ -186,25 +191,27 @@ public class StackingFillAndBuild : IStackable
     {
         float new_block_x = 0;
         float new_block_z = 0;
-        float new_block_y = 0.045f * current_block_layer + 0.002f;
+        float new_block_y = _tileSize.y * current_block_layer + 0.002f;
         float angle = 0;
         int num_pairs = 0;
         int target_pairs = 4;
+        Vector3 position;
+        Quaternion rotation;
 
         // store distances and angles between all blocks, gets block pairs, runs only once
         if (_instantiate_block == false) {
-            block_arr = new Block[bot_blocks.Count];
+            _block_arr = new Block[bot_blocks.Count];
 
             for (int i = 0; i < bot_blocks.Count; i++)
             {
-                block_arr[i] = new Block(i, bot_blocks[i], bot_blocks.Count);
+                _block_arr[i] = new Block(i, bot_blocks[i], bot_blocks.Count);
             }
 
             for (int i = 0; i < bot_blocks.Count; i++)
             {
                 for (int j = 0; j < bot_blocks.Count; j++)
                 {
-                    block_arr[i].block_compare(block_arr[j], j);
+                    _block_arr[i].block_compare(_block_arr[j], j);
                 }
             }
             // Nested loops below could be made tidier!
@@ -214,7 +221,7 @@ public class StackingFillAndBuild : IStackable
                 float rota_limit = 10f + (5f * t);
                 for (int i = 0; i < bot_blocks.Count; i++)
                 {
-                    var new_pair = block_arr[i].get_block_pair(dist_limit, rota_limit);
+                    var new_pair = _block_arr[i].get_block_pair(dist_limit, rota_limit);
                     if (new_pair != null)
                     {
                         for (int j = 0; j < new_pair.Count; j++)
@@ -259,14 +266,39 @@ public class StackingFillAndBuild : IStackable
             _block_pairs.ForEach(i => Debug.Log($"in _block_pair: {i[0]}, {i[1]}"));
 
             _instantiate_block = true;
+            foreach (var int_pair in _block_pairs)
+            {
+                foreach (var i in int_pair)
+                {
+                    _arch_layer.Add(_block_arr[i].Ori);
+                }
+            }
         }
 
-        Vector3 position = new Vector3(new_block_x, new_block_y, new_block_z);
-        Quaternion rotation = Quaternion.Euler(0, angle, 0);
+        if (_arch_block_num < _arch_layer.Count)
+        {
+            Orient new_block_above = AboveBlock(_arch_layer[_arch_block_num]);
+            position = new_block_above.Center;
+            rotation = new_block_above.Rotation;
+            _arch_block_num++;
+        }  
+        else
+        {
+            position = new Vector3(new_block_x, new_block_y, new_block_z);
+            rotation = Quaternion.Euler(0, angle, 0);
+        }
+        
+        Debug.Log(string.Format("Block {0} location: {1:0.000}, {2:0.000}, {3:0.000}, {4:0}", _placed_blocks.Count + 1, position.x, position.y, position.z, rotation.eulerAngles.y));
         Orient new_block = new Orient(position, rotation);
-
-        Debug.Log(string.Format("Block {0} location: {1:0.000}, {2:0.000}, {3:0.000}", top_blocks.Count + 1, new_block_x, new_block_y, new_block_z));
         return new_block;
+    }
+
+    // returns orient position above block passed in
+    Orient AboveBlock(Orient ori)
+    {
+        Orient above = new Orient(ori.Center, ori.Rotation);
+        above.Center.y += _tileSize.y;
+        return above;
     }
 
     // Position new block as far as possible from existing blocks
@@ -282,7 +314,7 @@ public class StackingFillAndBuild : IStackable
         float largest_dist = 0;     // largest min distance out of all points on table
         float new_block_x = 0;      // x coordinate of new block
         float new_block_z = 0;      // z coordinate of new block
-        float new_block_y = 0.045f + 0.002f; // y (height) of new block of bottom layer on table + tolerance
+        float new_block_y = _tileSize.y + 0.002f; // y (height) of new block of bottom layer on table + tolerance
 
         for (int x = padding_x_min; x < table_x - padding_x_max; x++)
         {
@@ -337,15 +369,15 @@ public class StackingFillAndBuild : IStackable
         Quaternion rotation = Quaternion.Euler(0, angle, 0);
         Orient new_block = new Orient(position, rotation);
 
-        Debug.Log(string.Format("Block {0} location: {1:0.000}, {2:0.000}, {3:0.000}, {4:00}", existing_blocks.Count + 1, new_block_x, new_block_y, new_block_z, angle));
+        Debug.Log(string.Format("Block {0} location: {1:0.000}, {2:0.000}, {3:0.000}, {4:0}", existing_blocks.Count + 1, new_block_x, new_block_y, new_block_z, angle));
         return new_block;
     }
 
     //function for finding the arch positions and rotations
     public Orient[] ArchPositions(int ABlock, int BBlock)
     {
-        Block A = block_arr[ABlock];
-        Block B = block_arr[BBlock];
+        Block A = _block_arr[ABlock];
+        Block B = _block_arr[BBlock];
 
         Vector3 AB = A.Center - B.Center;
         float ABdist = AB.magnitude;
