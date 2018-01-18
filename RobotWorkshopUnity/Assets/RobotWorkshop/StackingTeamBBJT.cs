@@ -38,6 +38,10 @@ public class StackingTeamBBJT : IStackable
         }
         // there is no tiles in the camera scan
         if (tiles.Count == 0)
+        {
+            Message = "No tiles left.";
+            return false;
+        }
 
         return true;
     }
