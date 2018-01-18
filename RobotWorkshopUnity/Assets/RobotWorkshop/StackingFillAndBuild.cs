@@ -35,25 +35,35 @@ public class StackingFillAndBuild : IStackable
         _camera = mode == Mode.Virtual ? new TeamAVirtualCamera() as ICamera : new LiveCamera() as ICamera;
     }
 
+    bool CheckCamera(string area, IList<Orient> camera)
+    {
+        if (camera == null)
+        {
+            Message = "Camera error.";
+            Debug.Log($"{area} = null");
+            return false;
+        }
+
+        if (camera.Count == 0)
+        {
+            Message = $"No {area} blocks left.";
+            return false;
+        }
+
+        return true;
+    }
+
     public PickAndPlaceData GetNextTargets()
     {
         IList<Orient> pick_top = _camera.GetTiles(_pick_area);
         IList<Orient> place_top = _camera.GetTiles(_place_area);
+
+        if (!CheckCamera("top", pick_top)) return null;
+        if (!CheckCamera("place", place_top)) return null;
+
         Debug.Log($"{pick_top.Count} pick blocks, {place_top.Count} placed blocks detected");
         _pick_blocks = pick_top;
 
-        if (pick_top == null)
-        {
-            Message = "Camera error.";
-            Debug.Log("pick_top = null");
-            return null;
-        }
-
-        if (_pick_blocks.Count == 0)
-        {
-            Message = "No pick blocks left.";
-            return null;
-        }
 
         // Debug.Log(string.Format("_placed_blocks.Count = {0}", _placed_blocks.Count));
         Orient pick = pick_top.Last();
