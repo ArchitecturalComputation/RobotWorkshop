@@ -133,7 +133,7 @@ public class StackingTeamBBJT : IStackable
         float stepDistance;
 
        // distance = Mathf.Max(vector.magnitude -  0.5f * _tileSize.x -  0.5f * _tileSize.y)
-        if (vector.magnitude < 0.70f)
+        if (vector.magnitude < 0.40f)
         {
             stepDistance = 0.000f;
         }
@@ -161,6 +161,7 @@ class TeamBBJTVirtualCamera : ICamera
            new Orient(0.7f, 0.045f, 0.3f, 45),
            new Orient(0.5f, 0.045f, 0.6f, 20),
            new Orient(0.8f, 0.045f, 0.6f, 0),
+
            // brick for placing.
            new Orient(0.1f,0.045f,0.5f,90)
         };
