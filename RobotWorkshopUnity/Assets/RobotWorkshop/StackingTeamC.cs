@@ -5,7 +5,8 @@ using System;
 public class StackingTeamC : IStackable
 {
     public string Message { get; set; }
-    public IEnumerable<Orient> Display { get { return _placeTiles; } }   
+    public IEnumerable<Orient> Display { get { return _placeTiles; } }
+
     readonly float _gap = 0.005f;
     readonly Vector3 _pickPoint = new Vector3(0.2f, 0, 0.4f);
     readonly Vector3 _placePoint = new Vector3(1.2f, 0, 0.4f);
@@ -42,20 +43,16 @@ public class StackingTeamC : IStackable
             // definig place area and scaning
             var scanRect = new Rect(1.4f * 0.25f + m, 0 + m, 1.4f * 0.75f - m * 2, 0.8f - m * 2);
             var scanTiles = _camera.GetTiles(scanRect);
-            //layer 1
-            var _center = new Vector3(0.7f, 0.045f, 0.4f);
-            //layer 2
-            var _center2 = new Vector3(0.7f, 0.045f*2, 0.4f);
-            //layer 3
-            var _center3 = new Vector3(0.7f, 0.045f*3, 0.4f);
+
+
+            var _center = new Vector3(0.7f,0f,0.4f);
             if (!CheckCamera(scanTiles)) return null;
-            
             if (scanTiles.Count > 1)
             {
                 Message = "Place a single tile on the next row and press 'start loop'.";
                 return null;
             }
-            _placeTiles = CreateRow(scanTiles.First(), _center3);
+            _placeTiles = CreateRow(scanTiles.First(), _center);
         }
 
         // definig pick area and scaning
@@ -70,7 +67,7 @@ public class StackingTeamC : IStackable
         return new PickAndPlaceData { Pick = pick, Place = place };
     }
 
-    List<Orient> CreateRow(Orient orient, Vector3 center)
+    List<Orient> CreateRow(Orient orient, Vector3 center) //orient is the scanned brick's center
     {   //float m = 0.02f;
         //scan Rect = (1.4f * 0.25f + m ,   0 + m,    1.4f * 0.75f - m * 2,   0.8f - m * 2);
         // pickRect = (0 + m            ,   0 + m,    1.4f * 0.25f - m * 2,   0.8f - m * 2); =vector(1.4 , 0, 0.8)
@@ -86,7 +83,7 @@ public class StackingTeamC : IStackable
         for (int i = 0; i < tileNumber; i++)
         {
             var angle = 360 / (float)tileNumber;
-            var newTile = orient.RotateAround(center, i*angle);
+            var newTile = orient.RotateAround(center, i*angle); //newTile is the birck's center of new one
             allBlocks.Add(newTile);
         }
         return allBlocks;
@@ -96,35 +93,31 @@ public class StackingTeamC : IStackable
 class TeamCVirtualCamera : ICamera
 {
     Queue<Orient[]> _sequence;
-    
     public TeamCVirtualCamera()
     {
-        var t = new[]
+        var t = new[] //new array is about orient
         {
-            //layer 1
-           //new Orient(0.98f,0.045f,0.4f,90f),
-           //layer 2
-            // new Orient(0.96f,0.045f*2,0.4f,90f),
-             //layer 3
-             new Orient(0.94f,0.045f*3,0.4f,90f),
-          new Orient(0.2f,0.045f*2,0.1f,30.0f),
-        
+           new Orient(0.98f, 0.045f, 0.4f,   90f),
+           new Orient(0.8f, 0.045f*2,   0.6f,   30.0f),
+           new Orient(0.1f, 0.045f,  0.5f, 90), 
         };
-        _sequence = new Queue<Orient[]>(new[]
+        _sequence = new Queue<Orient[]>(new[]   //total number of total Tiles?   //only 6bricks implemented
         {
-           new[] {t[0]},
-           new[] {t[1]},
-           new[] {t[1]},
-           new[] {t[1]},
-           new[] {t[1]},
-           new[] {t[1]},
-           new[] {t[1]},
-           new[] {t[1]},
-           new[] {t[1]},
+           new[] {t[0],t[1]},
+           new[] {t[0]}, //this is applied to the first row
+           new[] {t[2]},
+           new[] {t[2]},
+           new[] {t[2]},
+           new[] {t[2]},
+           new[] {t[2]},
+           new[] {t[2]},
+           new[] {t[2]},
+           new[] {t[2]},
            new Orient[0]
         });
-  
-
+       
+        
+    
     }
     public IList<Orient> GetTiles(Rect area)
     {
