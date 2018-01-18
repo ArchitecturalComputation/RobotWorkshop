@@ -341,7 +341,7 @@ public class StackingFillAndBuild : IStackable
         return new_block;
     }
 
-     //function for finding the arch positions and rotations
+    //function for finding the arch positions and rotations
     public Orient[] ArchPositions(int ABlock, int BBlock)
     {
         Block A = block_arr[ABlock];
