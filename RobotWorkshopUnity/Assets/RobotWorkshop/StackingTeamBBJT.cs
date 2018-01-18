@@ -111,14 +111,18 @@ public class StackingTeamBBJT : IStackable
         var towers = new List<Orient>();
         var mid = Midpoint(scanTiles);
         float maxStep = 0.02f;
-        float grip = 0.015f;
+        float grip = 0;// 0.015f;
         var radius = new Vector2(_tileSize.x + grip, _tileSize.x + grip).magnitude * 0.5f;
 
-        var vectors = scanTiles
-            .Select(t => mid - t.Center);
+        var centers = scanTiles.Select(t => t.Center + t.Rotation * Vector3.forward * _tileSize.z).ToList();
 
-        var distances = vectors
-            .Select(v => Mathf.Max(v.magnitude - radius * 1, 0));
+        var distances = MaxDistance(centers, mid, radius).ToList();
+
+        var vectors = centers
+            .Select(c => mid - c);
+
+        //  var distances = vectors
+        //     .Select(v => Mathf.Max(v.magnitude - radius * 1, 0));
 
         var unitVectors = vectors.Select(v => v.normalized).ToList();
 
@@ -133,7 +137,7 @@ public class StackingTeamBBJT : IStackable
             {
                 var stepDistance = stepDistances[i];
                 var vector = unitVectors[i] * (stepDistance * j);
-                var pos = scanTiles[i].Center + vector;
+                var pos = centers[i] + vector;
                 var rot = scanTiles[i].Rotation;
                 var location = new Orient(pos, rot);
                 if (j > 0) towers.Add(TowerLocation(j * 2, location));
@@ -142,6 +146,21 @@ public class StackingTeamBBJT : IStackable
         }
 
         return towers;
+    }
+
+    IEnumerable<float> MaxDistance(IList<Vector3> points, Vector3 center, float radius)
+    {
+        foreach (var point in points)
+        {
+            var vector = point - center;
+            var angles = points.Where(o => o != point).Select(o => Vector3.Angle(vector, (o - center)));
+            var angle = angles.Min() * 0.5f;
+
+            var h = radius / Mathf.Sin(angle * (Mathf.PI / 180));
+            var distance = vector.magnitude - h;
+            if (distance < 0) throw new ArgumentException("Tiles are too close!");
+            yield return distance;
+        }
     }
 
     Orient TowerLocation(int index, Orient location, Vector3 midpoint)
@@ -167,7 +186,7 @@ public class StackingTeamBBJT : IStackable
         //Orient tilt = new Orient(0, 0, 0, 8f * layer);
         //tile = tile.Transform(tilt);
 
-        tile.Center += location.Center + location.Rotation * Vector3.forward * _tileSize.z;
+        tile.Center += location.Center; // + location.Rotation * Vector3.forward * _tileSize.z;
 
 
         return tile;
