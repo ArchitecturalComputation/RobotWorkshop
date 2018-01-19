@@ -36,7 +36,6 @@ public class StackingFillAndBuild : IStackable
 
     public StackingFillAndBuild(Mode mode)
     {
-
         float m = 0.02f;
         _pick_area = new Rect(0 + m, 0 + m, _pick_area_width * 0.001f - m, 0.8f - m);
         _place_area = new Rect(_pick_area_width * 0.001f + m, 0 + m, 1.0f - m, 0.8f - m);
