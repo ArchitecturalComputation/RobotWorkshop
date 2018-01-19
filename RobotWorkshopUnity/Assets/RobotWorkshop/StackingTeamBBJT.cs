@@ -62,7 +62,7 @@ public class StackingTeamBBJT : IStackable
             _startTiles = scanTiles;
             if (!CheckCamera(scanTiles)) return null;
 
-            if(scanTiles.Count == 1 ) _placeTiles = ConstructTowersA(scanTiles);
+            if(scanTiles.Count == 1 ) _placeTiles = ConstructTowerA(scanTiles);
             else _placeTiles = ConstructTowersB(scanTiles);
 
         }
@@ -85,7 +85,7 @@ public class StackingTeamBBJT : IStackable
         return new PickAndPlaceData { Pick = pick, Place = place };
     }
 
-    List<Orient> ConstructTowersA(IList<Orient> scanTiles)
+    List<Orient> ConstructTowerA(IList<Orient> scanTiles)
     {
         var towers = new List<Orient>();
 
