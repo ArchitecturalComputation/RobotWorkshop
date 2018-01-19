@@ -58,11 +58,12 @@ public class StackingTeamBBJT : IStackable
             //0.75 is the are used for placing the tiles
             var scanRect = new Rect(1.4f * 0.25f + m, 0 + m, 1.4f * 0.75f - m * 2, 0.8f - m * 2);
             var scanTiles = _camera.GetTiles(scanRect);
+            Debug.Log("scanTiles Count: " + scanTiles.Count);
             _startTiles = scanTiles;
             if (!CheckCamera(scanTiles)) return null;
 
-            //_placeTiles = ConstructTowersA(scanTiles);
-            _placeTiles = ConstructTowersB(scanTiles);
+            if(scanTiles.Count == 1 ) _placeTiles = ConstructTowersA(scanTiles);
+            else _placeTiles = ConstructTowersB(scanTiles);
 
         }
 
@@ -87,17 +88,15 @@ public class StackingTeamBBJT : IStackable
     List<Orient> ConstructTowersA(IList<Orient> scanTiles)
     {
         var towers = new List<Orient>();
-        var _midpoint = Midpoint(scanTiles);
 
-        for (int i = 1; i < 15; i++)
+        for (int j = 0; j < 10; j++)
         {
-            foreach (var tile in scanTiles)
-            {
-                var nextTile = TowerLocation(i, tile, _midpoint);
-                var distanceRadius = _midpoint - nextTile.Center;
-                if (distanceRadius.magnitude < distanceRadius.magnitude - (0.5f * _tileSize.x) - (0.5f * _tileSize.z)) break;
-                towers.Add(nextTile);
-            }
+                var pos = scanTiles[0].Center;
+                var rot = scanTiles[0].Rotation;
+                var location = new Orient(pos, rot);
+                if (j > 0) towers.Add(TowerLocation(j * 2, location));
+                towers.Add(TowerLocation(j * 2 + 1, location));
+            
         }
 
         return towers;
@@ -109,6 +108,7 @@ public class StackingTeamBBJT : IStackable
         // safety radius
         // radius from the tile that is the magnitude related to size
         var towers = new List<Orient>();
+        
         var mid = Midpoint(scanTiles);
         float maxStep = 0.02f;
         float grip = 0;// 0.015f;
@@ -195,11 +195,14 @@ public class StackingTeamBBJT : IStackable
     Vector3 Midpoint(IList<Orient> startTiles)
     {
         Vector3 sum = Vector3.zero;
+        
         foreach (var tile in startTiles)
-        {
-            sum += tile.Center;
-        }
-        return sum / startTiles.Count;
+            {
+                sum += tile.Center;
+            }
+        
+
+       return sum / startTiles.Count;
     }
 }
 
@@ -216,9 +219,9 @@ class TeamBBJTVirtualCamera : ICamera
             //bricks place in the placing area = only scaned once.
             // discribed (x,y,z, rotation in y)
            new Orient(0.5f, 0.045f, 0.2f, 45),
-           new Orient(0.3f, 0.045f, 0.6f, 20),
-           new Orient(0.9f, 0.045f, 0.6f, 0),
-           new Orient(0.9f, 0.045f, 0.2f, 0),
+           //new Orient(0.3f, 0.045f, 0.6f, 20),
+           //new Orient(0.9f, 0.045f, 0.6f, 0),
+           //new Orient(0.9f, 0.045f, 0.2f, 0),
 
            // brick for placing.
            new Orient(0.1f,0.045f,0.5f,90)
@@ -227,7 +230,7 @@ class TeamBBJTVirtualCamera : ICamera
         _sequence = new Queue<Orient[]>(new[]
         {
 
-           new[] {t[0],t[1],t[2],t[3]},
+           /*new[] {t[0],t[1],t[2],t[3]},
            new[] {t[4]},
            new[] {t[4]},
            new[] {t[4]},
@@ -239,7 +242,21 @@ class TeamBBJTVirtualCamera : ICamera
            new[] {t[4]},
            new[] {t[4]},
            new[] {t[4]},
-           new[] {t[4]},
+           new[] {t[4]},*/
+
+           new[] {t[0]},
+           new[] {t[1]},
+           new[] {t[1]},
+           new[] {t[1]},
+           new[] {t[1]},
+           new[] {t[1]},
+           new[] {t[1]},
+           new[] {t[1]},
+           new[] {t[1]},
+           new[] {t[1]},
+           new[] {t[1]},
+           new[] {t[1]},
+           new[] {t[1]},
 
            new Orient[0]
         });
