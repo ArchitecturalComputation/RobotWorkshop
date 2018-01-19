@@ -183,8 +183,8 @@ public class StackingTeamBBJT : IStackable
         tile.Center = location.Rotation * tile.Center;
         tile.Rotation = location.Rotation * tile.Rotation;
 
-        //Orient tilt = new Orient(0, 0, 0, 8f * layer);
-        //tile = tile.Transform(tilt);
+        Orient tilt = new Orient(0, 0, 0, 8f * layer);
+        tile = tile.Transform(tilt);
 
         tile.Center += location.Center; // + location.Rotation * Vector3.forward * _tileSize.z;
 
@@ -250,3 +250,10 @@ class TeamBBJTVirtualCamera : ICamera
         return _sequence.Dequeue();
     }
 }
+//public class Towers : MonoBehaviour
+//{
+
+//    public GameObject _tile;
+
+
+//}
