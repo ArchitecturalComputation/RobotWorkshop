@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class StackingTeamBBJT : IStackable
 {
     public string Message { get; private set; }
@@ -58,8 +59,12 @@ public class StackingTeamBBJT : IStackable
             //0.75 is the are used for placing the tiles
             var scanRect = new Rect(1.4f * 0.25f + m, 0 + m, 1.4f * 0.75f - m * 2, 0.8f - m * 2);
             var scanTiles = _camera.GetTiles(scanRect);
+            
             Debug.Log("scanTiles Count: " + scanTiles.Count);
+
             _startTiles = scanTiles;
+            //  new InstantiateObject(_startTiles);
+
             if (!CheckCamera(scanTiles)) return null;
 
             if(scanTiles.Count == 1 ) _placeTiles = ConstructTowerA(scanTiles);
@@ -87,32 +92,29 @@ public class StackingTeamBBJT : IStackable
 
     List<Orient> ConstructTowerA(IList<Orient> scanTiles)
     {
-        var towers = new List<Orient>();
+        var tower = new List<Orient>();
+ 
+        var center = scanTiles[0].Center + scanTiles[0].Rotation * Vector3.forward * _tileSize.z;
 
         for (int j = 0; j < 10; j++)
         {
-                var pos = scanTiles[0].Center;
+                var pos = center;
                 var rot = scanTiles[0].Rotation;
                 var location = new Orient(pos, rot);
-                if (j > 0) towers.Add(TowerLocation(j * 2, location));
-                towers.Add(TowerLocation(j * 2 + 1, location));
-            
+                if (j > 0) tower.Add(TowerLocation(j * 2, location));
+                tower.Add(TowerLocation(j * 2 + 1, location));
         }
 
-        return towers;
+        return tower;
     }
 
     List<Orient> ConstructTowersB(IList<Orient> scanTiles)
     {
-
-        // safety radius
-        // radius from the tile that is the magnitude related to size
         var towers = new List<Orient>();
         
         var mid = Midpoint(scanTiles);
         float maxStep = 0.02f;
-        float grip = 0;// 0.015f;
-        var radius = new Vector2(_tileSize.x + grip, _tileSize.x + grip).magnitude * 0.5f;
+        var radius = new Vector2(_tileSize.x, _tileSize.x).magnitude * 0.5f;
 
         var centers = scanTiles.Select(t => t.Center + t.Rotation * Vector3.forward * _tileSize.z).ToList();
 
@@ -183,8 +185,8 @@ public class StackingTeamBBJT : IStackable
         tile.Center = location.Rotation * tile.Center;
         tile.Rotation = location.Rotation * tile.Rotation;
 
-        Orient tilt = new Orient(0, 0, 0, 8f * layer);
-        tile = tile.Transform(tilt);
+        //Orient tilt = new Orient(0, 0, 0, 8f * layer);
+        //tile = tile.Transform(tilt);
 
         tile.Center += location.Center; // + location.Rotation * Vector3.forward * _tileSize.z;
 
@@ -267,10 +269,3 @@ class TeamBBJTVirtualCamera : ICamera
         return _sequence.Dequeue();
     }
 }
-//public class Towers : MonoBehaviour
-//{
-
-//    public GameObject _tile;
-
-
-//}
