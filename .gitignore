@@ -34,3 +34,5 @@ sysinfo.txt
 *.apk
 *.unitypackage
 /RobotWorkshopUnity/Assets/RobotWorkshop/StackingTeamC.cs.meta
+/RobotWorkshopUnity/Assets/RobotWorkshop/InstantiateObject.cs
+/RobotWorkshopUnity/Assets/RobotWorkshop/InstantiateObject.cs.meta
