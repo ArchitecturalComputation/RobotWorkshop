@@ -9,7 +9,7 @@ public class StackingFillAndBuild : IStackable
     public string Message { get; private set; }
     public IEnumerable<Orient> Display { get{ return _display_blocks; } }
 
-    int _bottom_layer_blocks = 13;
+    int _bottom_layer_blocks = 12;
     int _max_total_blocks = 34;
     int target_pairs = 3;
     int _stop_after_blocks = 0;
