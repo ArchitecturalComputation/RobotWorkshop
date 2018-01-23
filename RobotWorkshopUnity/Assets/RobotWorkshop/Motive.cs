@@ -11,7 +11,7 @@ using static UnityEngine.Mathf;
 public class Motive : IDisposable
 {
     public string multicastIP = "239.255.42.99";
-    public string hostIP = "10.97.85.186"; //"10.0.1.6";
+    //public string hostIP ="10.97.118.13"; // "10.97.85.186"; //"10.0.1.6";
     public int dataPort = 1511;
     // public int commandPort = 1510;
     public string NatNetVersion = "2.7.0.0";
@@ -399,7 +399,7 @@ public class Motive : IDisposable
             IPAddress mulIP = IPAddress.Parse(multicastIP);
             mDataListner.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(mulIP, IPAddress.Any));
             mDataListner.Blocking = true;
-            mDataListner.ReceiveTimeout = 5000;
+            mDataListner.ReceiveTimeout = 500;
             mDataListner.ReceiveBufferSize = SOCKET_BUFSIZE;
         }
         catch (Exception e)
